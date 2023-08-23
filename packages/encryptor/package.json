@@ -1,0 +1,8 @@
+{
+  "name": "@4thtech-sdk/encryptor",
+  "version": "0.0.3",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "vite"
+  }
+}

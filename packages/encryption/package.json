@@ -1,0 +1,8 @@
+{
+  "name": "@4thtech-sdk/encryption",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "dependencies": {
+    "crypto": "^1.0.1"
+  }
+}

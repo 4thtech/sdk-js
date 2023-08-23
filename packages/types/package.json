@@ -1,0 +1,11 @@
+{
+  "name": "@4thtech-sdk/types",
+  "version": "0.2.0",
+  "type": "commonjs",
+  "dependencies": {
+    "ethers": "^5.7.2"
+  },
+  "devDependencies": {
+    "ts-essentials": "^9.3.0"
+  }
+}

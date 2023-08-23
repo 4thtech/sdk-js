@@ -1,0 +1,13 @@
+{
+  "name": "@4thtech-sdk/ethereum",
+  "version": "0.2.1",
+  "type": "commonjs",
+  "dependencies": {
+    "ethers": "^5.7.2",
+    "lodash.merge": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/lodash.merge": "^4.6.7",
+    "ts-essentials": "^9.3.0"
+  }
+}

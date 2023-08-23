@@ -1,0 +1,28 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@4thtech-sdk/encryption": ["packages/encryption/src/index.ts"],
+      "@4thtech-sdk/encryptor": ["packages/encryptor/src/index.ts"],
+      "@4thtech-sdk/ethereum": ["packages/ethereum/src/index.ts"],
+      "@4thtech-sdk/storage": ["packages/storage/src/index.ts"],
+      "@4thtech-sdk/types": ["packages/types/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}
