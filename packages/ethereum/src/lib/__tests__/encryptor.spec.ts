@@ -1,18 +1,18 @@
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { UserReadyChain } from '@4thtech-sdk/types';
-import { TestSigner } from './utils.spec';
+import { TestEncryptorExtension, TestSigner } from './utils.spec';
 import { localhost } from '../chains';
-import { Encryptor } from '@4thtech-sdk/ethereum';
+import { Encryptor } from '../encryptor';
 
 // Initialize signer
 const signer = new TestSigner();
-const receiver = new TestSigner(1);
 
 // Define chain
 const testChain = localhost;
 
 const encryptor = new Encryptor({
-  userContractConfig: {
+  encryptorExtension: new TestEncryptorExtension(signer),
+  userConfig: {
     signer,
     chain: testChain as UserReadyChain,
   },
@@ -20,29 +20,21 @@ const encryptor = new Encryptor({
 
 describe('Encryptor', () => {
   describe('Interface', () => {
-    it('Should store encryptor public key', async () => {
-      const txResponse = await encryptor.storePublicKey();
+    it('Should store and retrieve encryptor public key', async () => {
+      await encryptor.storePublicKey();
 
-      console.log(txResponse);
-      // TODO: expect
-    });
+      const storedPublicKey = await encryptor.retrieveUserPublicKey(await signer.getAddress());
+      const encryptorPublicKey = await encryptor.getPublicKey();
 
-    it('Should retrieve user public key', async () => {
-      // const userPublicKey = await encryptor.retrieveUserPublicKey(await signer.getAddress());
-      const userPublicKey = await encryptor.retrieveUserPublicKey(await receiver.getAddress());
-
-      console.log(userPublicKey);
-      // TODO: expect
+      expect(storedPublicKey).toEqual(encryptorPublicKey);
     });
 
     it('Should check if user is initialized', async () => {
-      // const isUserInitialized = await encryptor.isUserAddressInitialized(await signer.getAddress());
-      const isUserInitialized = await encryptor.isUserAddressInitialized(
-        await receiver.getAddress(),
-      );
+      await encryptor.storePublicKey();
 
-      console.log(isUserInitialized);
-      // TODO: expect
+      const isUserInitialized = await encryptor.isUserAddressInitialized(await signer.getAddress());
+
+      expect(isUserInitialized).toEqual(true);
     });
   });
 });

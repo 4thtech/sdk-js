@@ -12,15 +12,15 @@ export class EncryptorAesEncryption implements Encryption {
 
   private aesEncryption: AesEncryption;
 
-  private encryptor: EncryptorService;
+  private encryptorService: EncryptorService;
 
-  constructor(encryptor: EncryptorService) {
+  constructor(encryptorService: EncryptorService) {
     this.aesEncryption = new AesEncryption();
-    this.encryptor = encryptor;
+    this.encryptorService = encryptorService;
   }
 
   public async initialize(receiverAddress: string): Promise<void> {
-    const receiverPublicKey = await this.encryptor.retrieveUserPublicKey(receiverAddress);
+    const receiverPublicKey = await this.encryptorService.retrieveUserPublicKey(receiverAddress);
 
     if (!receiverPublicKey) {
       throw new Error('Receiver public key is required to be able to encrypt data.');
@@ -36,7 +36,7 @@ export class EncryptorAesEncryption implements Encryption {
   }
 
   public async getMetadata(): Promise<EncryptionMetaData> {
-    const senderPublicKey = await this.encryptor.getPublicKey();
+    const senderPublicKey = await this.encryptorService.getPublicKey();
 
     if (!senderPublicKey) {
       throw new Error('Public key was not able to retrieved from Encryptor extension');
@@ -69,7 +69,7 @@ export class EncryptorAesEncryption implements Encryption {
   }
 
   private async getSharedSecret(publicKey: string): Promise<string> {
-    const sharedSecret = await this.encryptor.computeSharedSecretKey(publicKey);
+    const sharedSecret = await this.encryptorService.computeSharedSecretKey(publicKey);
 
     if (!sharedSecret) {
       throw new Error('Encryptor was not able to calculate shared secret key.');

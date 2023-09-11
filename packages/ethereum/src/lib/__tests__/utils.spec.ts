@@ -1,4 +1,12 @@
-import { EthereumTransactionRequest, FileInput, Signer } from '@4thtech-sdk/types';
+import {
+  Chain,
+  EncryptorExtension,
+  EncryptorState,
+  EthereumTransactionRequest,
+  FileInput,
+  Signer,
+  UserReadyChain,
+} from '@4thtech-sdk/types';
 import { ethers } from 'ethers';
 import { RemoteStorageProvider } from '@4thtech-sdk/storage';
 import * as fs from 'fs';
@@ -6,7 +14,7 @@ import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import path from 'path';
 import { Readable } from 'stream';
-import { EventEmitter } from 'events';
+import { Encryptor } from '@4thtech-sdk/ethereum';
 
 // Private keys from local Hardhat node
 const testPrivateKeys = [
@@ -18,19 +26,23 @@ const testPrivateKeys = [
 ];
 
 export class TestSigner implements Signer {
-  private wallet;
+  private readonly wallet;
 
   constructor(id?: number) {
     const privateKey = testPrivateKeys[id ?? 0];
     this.wallet = new ethers.Wallet(privateKey);
   }
 
-  signTransaction(tx: EthereumTransactionRequest): Promise<string> {
+  public signTransaction(tx: EthereumTransactionRequest): Promise<string> {
     return this.wallet.signTransaction(tx);
   }
 
-  getAddress(): Promise<string> {
+  public getAddress(): Promise<string> {
     return this.wallet.getAddress();
+  }
+
+  public getWallet(): ethers.Wallet {
+    return this.wallet;
   }
 }
 
@@ -79,4 +91,46 @@ export class TestRemoteStorageProvider extends RemoteStorageProvider {
 
     return targetDir;
   }
+}
+
+export class TestEncryptorExtension implements EncryptorExtension {
+  private readonly wallet: ethers.Wallet;
+
+  constructor(signer: TestSigner) {
+    this.wallet = signer.getWallet();
+  }
+
+  public getState(): EncryptorState {
+    return EncryptorState.UNLOCKED;
+  }
+
+  public getPublicKey(): string {
+    return this.wallet.publicKey;
+  }
+
+  public getPublicKeyType(): string {
+    return 'TEST_ENCRYPTOR_EC';
+  }
+
+  public computeSharedSecretKey(publicKey: string): string {
+    return this.wallet._signingKey().computeSharedSecret(publicKey);
+  }
+}
+
+export async function prepareEncryptor(signer: TestSigner, chain: Chain): Promise<Encryptor> {
+  const encryptor = new Encryptor({
+    encryptorExtension: new TestEncryptorExtension(signer),
+    userConfig: {
+      signer,
+      chain: chain as UserReadyChain,
+    },
+  });
+
+  const isAddressInitialized = await encryptor.isUserAddressInitialized(await signer.getAddress());
+
+  if (!isAddressInitialized) {
+    await encryptor.storePublicKey();
+  }
+
+  return encryptor;
 }

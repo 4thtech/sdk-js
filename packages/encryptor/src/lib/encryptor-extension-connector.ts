@@ -1,7 +1,7 @@
-import { BlockLabsEncryptor, EncryptorState } from '@4thtech-sdk/types';
+import { EncryptorExtension, EncryptorState } from '@4thtech-sdk/types';
 import { EncryptorEventHandler } from './encryptor-event-handler';
 
-export class EncryptorExtensionConnector implements BlockLabsEncryptor {
+export class EncryptorExtensionConnector implements EncryptorExtension {
   private readonly encryptorEventHandler: EncryptorEventHandler;
 
   constructor() {

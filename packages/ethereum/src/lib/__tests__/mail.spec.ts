@@ -1,17 +1,17 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
-  EncryptionType,
+  Encryption,
   Envelope,
   EthereumTransactionResponse,
   isRemoteFileInfo,
   MailReadyChain,
 } from '@4thtech-sdk/types';
-import { TestRemoteStorageProvider, TestSigner } from './utils.spec';
+import { prepareEncryptor, TestRemoteStorageProvider, TestSigner } from './utils.spec';
 import { BigNumber } from 'ethers';
 import path from 'path';
 import { Mail } from '../mail';
 import { localhost } from '../chains';
-import { AesEncryption, EncryptionHandler } from '@4thtech-sdk/encryption';
+import { AesEncryption, EncryptionHandler, EncryptorAesEncryption } from '@4thtech-sdk/encryption';
 import * as fs from 'fs';
 
 // Initialize signer
@@ -134,10 +134,10 @@ describe('Mail', () => {
         });
       });
 
-      it('Should encrypt with AES and store correctly', async () => {
+      async function sendAndTestMail(encryptionInstance: Encryption) {
         await mail.send({
           envelope,
-          encryption: aesEncryption,
+          encryption: encryptionInstance,
           onStateChange: (state) => {
             console.log(state);
           },
@@ -169,63 +169,27 @@ describe('Mail', () => {
             );
           }
         }
+      }
+
+      it('Should encrypt with AES and store correctly', async () => {
+        await sendAndTestMail(aesEncryption);
       });
 
-      // it('Should encrypt with Encryptor AES and store correctly', async () => {
-      //   const envelope: Envelope = {
-      //     content: {
-      //       subject: 'Test encryptor encrypted mail',
-      //       attachments: [
-      //         {
-      //           path: path.resolve(__dirname, './files/test-attachment-1.txt'),
-      //         },
-      //       ],
-      //     },
-      //     receiver: await receiver.getAddress(),
-      //     sender: await signer.getAddress(),
-      //   };
-      //
-      //   const encryptor = new Encryptor({
-      //     userContractConfig: {
-      //       signer,
-      //       chain: testChain as UserReadyChain,
-      //     },
-      //   });
-      //
-      //   const encryptorEncryption = new EncryptorAesEncryption(encryptor);
-      //   await encryptorEncryption.initialize(await signer.getAddress());  // TODO: replace with receiver
-      //
-      //   const encryptionHandler = new EncryptionHandler({
-      //     defaultEncryption: encryptorEncryption,
-      //   });
-      //
-      //   const encryptedMail = new Mail({
-      //     signer,
-      //     chain: testChain as MailReadyChain,
-      //     remoteStorageProvider,
-      //     encryptionHandler,
-      //   });
-      //
-      //   await encryptedMail.send(envelope);
-      //
-      //   const mailCount = await mail.count(await receiver.getAddress());
-      //
-      //   const receivedEnvelope = await encryptedMail.fetch(await receiver.getAddress(), mailCount.toNumber() - 1);
-      //
-      //   console.log(receivedEnvelope);
-      //
-      //   const attachments = receivedEnvelope.content.attachments;
-      //   console.log(attachments);
-      //
-      //   if (attachments?.length) {
-      //     const firstAttachment = attachments[0];
-      //
-      //     if (isRemoteFileInfo(firstAttachment)) {
-      //       const fileContent = await encryptedMail.downloadAttachment(firstAttachment);
-      //       console.log(Buffer.from(fileContent).toString());
-      //     }
-      //   }
-      // });
+      it('Should encrypt with Encryptor AES and store correctly', async () => {
+        // Prepare encryptor
+        const senderEncryptor = await prepareEncryptor(signer, testChain);
+        const receiverEncryptor = await prepareEncryptor(receiver, testChain);
+
+        // Prepare encryption
+        const senderEncryptorAesEncryption = new EncryptorAesEncryption(senderEncryptor);
+        await senderEncryptorAesEncryption.initialize(await receiver.getAddress());
+
+        const receiverEncryptorAesEncryption = new EncryptorAesEncryption(receiverEncryptor);
+        encryptionHandler.addEncryptionInstance(receiverEncryptorAesEncryption);
+
+        // Send and test mail
+        await sendAndTestMail(senderEncryptorAesEncryption);
+      });
     });
 
     it('Should set opened at', async () => {

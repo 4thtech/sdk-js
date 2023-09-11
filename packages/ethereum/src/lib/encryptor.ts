@@ -1,19 +1,24 @@
-import { EncryptorExtensionConnector } from '@4thtech-sdk/encryptor';
-import { EncryptorService, EthereumTransactionResponse } from '@4thtech-sdk/types';
+import {
+  EncryptorExtension,
+  EncryptorService,
+  EncryptorState,
+  EthereumTransactionResponse,
+} from '@4thtech-sdk/types';
 import { User } from './user';
 import { UserConfig } from './user';
 
 export type EncryptorConfig = {
-  userContractConfig: UserConfig;
+  encryptorExtension: EncryptorExtension;
+  userConfig: UserConfig;
 };
 
-export class Encryptor extends EncryptorExtensionConnector implements EncryptorService {
+export class Encryptor implements EncryptorService {
+  private readonly encryptorExtension: EncryptorExtension;
   private readonly user: User;
 
   constructor(config: EncryptorConfig) {
-    super();
-
-    this.user = new User(config.userContractConfig);
+    this.encryptorExtension = config.encryptorExtension;
+    this.user = new User(config.userConfig);
   }
 
   public async isUserAddressInitialized(address: string): Promise<boolean> {
@@ -21,9 +26,9 @@ export class Encryptor extends EncryptorExtensionConnector implements EncryptorS
   }
 
   public async retrieveUserPublicKey(address: string): Promise<string | undefined> {
-    const user = await this.user.fetch(address);
+    const user = await this.user.fetch(address).catch(() => undefined);
 
-    return user ? user.encryptionPublicKey.publicKey : undefined;
+    return user?.encryptionPublicKey.publicKey;
   }
 
   public async storePublicKey(): Promise<EthereumTransactionResponse> {
@@ -33,6 +38,25 @@ export class Encryptor extends EncryptorExtensionConnector implements EncryptorS
       throw new Error("Encryptor public key doesn't exist.");
     }
 
-    return this.user.setEncryptionPublicKey(publicKey, this.getPublicKeyType());
+    return this.user.setEncryptionPublicKey(publicKey, this.encryptorExtension.getPublicKeyType());
+  }
+
+  public getState(): Promise<EncryptorState> {
+    const state = this.encryptorExtension.getState();
+    return Promise.resolve(state);
+  }
+
+  public getPublicKey(): Promise<string | undefined> {
+    const publicKey = this.encryptorExtension.getPublicKey();
+    return Promise.resolve(publicKey);
+  }
+
+  public getPublicKeyType(): string {
+    return this.encryptorExtension.getPublicKeyType();
+  }
+
+  public computeSharedSecretKey(publicKey: string): Promise<string | undefined> {
+    const secretKey = this.encryptorExtension.computeSharedSecretKey(publicKey);
+    return Promise.resolve(secretKey);
   }
 }

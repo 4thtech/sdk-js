@@ -14,15 +14,17 @@ type ResponseObject = {
 
 export type RequestCallback = (response: ResponseObject) => void;
 
-export interface BlockLabsEncryptor {
-  getState(): Promise<EncryptorState>;
+export interface EncryptorExtension {
+  getState(): Promise<EncryptorState> | EncryptorState;
 
-  getPublicKey(): Promise<string | undefined>;
+  getPublicKey(): Promise<string | undefined> | string;
 
-  computeSharedSecretKey(publicKey: string): Promise<string | undefined>;
+  getPublicKeyType(): string;
+
+  computeSharedSecretKey(publicKey: string): Promise<string | undefined> | string;
 }
 
-export interface EncryptorService extends BlockLabsEncryptor {
+export interface EncryptorService extends EncryptorExtension {
   isUserAddressInitialized(address: string): Promise<boolean>;
 
   retrieveUserPublicKey(address: string): Promise<string | undefined>;
