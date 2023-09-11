@@ -89,3 +89,25 @@ export const edgewareTestnet: Chain = {
     },
   },
 };
+
+export const artheraTestnet: Chain = {
+  id: 10243,
+  name: 'Arthera Testnet',
+  network: 'artheraTestnet',
+  type: NetworkType.TEST_NET,
+  networkEndpoint: 'https://rpc-test.arthera.net',
+  contracts: {
+    appFeeManager: {
+      address: '0x628DAACcC211cE0A639e6EAd89B1c63b57d633d4',
+    },
+    mail: {
+      address: '0x00e75F6f934e1Fb2Bd881682F33dDFA814Ef1d2b',
+    },
+    chat: {
+      address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
+    },
+    user: {
+      address: '0x55755C910fAC95cf9c8265Af6a971fA3746029BA',
+    },
+  },
+};
