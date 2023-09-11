@@ -123,9 +123,7 @@ describe('Mail', () => {
         await aesEncryption.generateSecretKey();
 
         encryptionHandler = new EncryptionHandler({
-          customEncryptionImplementations: new Map([
-            [aesEncryption.getType() as EncryptionType, aesEncryption],
-          ]),
+          encryptionImplementations: [aesEncryption],
         });
 
         mail = new Mail({

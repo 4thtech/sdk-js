@@ -1,23 +1,28 @@
 import { Encryption, EncryptionMetaData, EncryptionType } from '@4thtech-sdk/types';
-import { AesEncryption } from './encryptions/aes-encryption';
 
 export type EncryptionHandlerConfig = {
-  customEncryptionImplementations?: Map<EncryptionType, Encryption>;
+  encryptionImplementations: Encryption[];
 };
 
 export class EncryptionHandler {
   private readonly encryptionMap: Map<EncryptionType, Encryption>;
 
   constructor(config: EncryptionHandlerConfig) {
-    const { customEncryptionImplementations } = config;
+    const { encryptionImplementations } = config;
 
-    this.encryptionMap = new Map([
-      [EncryptionType.AES, new AesEncryption()],
-      ...(customEncryptionImplementations || []),
-    ]);
+    this.encryptionMap = new Map();
+
+    encryptionImplementations.forEach((encryption) => {
+      this.addEncryptionInstance(encryption);
+    });
   }
 
-  async encrypt(data: ArrayBuffer, encryptionType: EncryptionType): Promise<ArrayBuffer> {
+  public addEncryptionInstance(encryptionInstance: Encryption): void {
+    const encryptionType = encryptionInstance.getType() as EncryptionType;
+    this.encryptionMap.set(encryptionType, encryptionInstance);
+  }
+
+  public async encrypt(data: ArrayBuffer, encryptionType: EncryptionType): Promise<ArrayBuffer> {
     const encryption = this.getEncryption(encryptionType);
     return encryption.encrypt(data);
   }
