@@ -1,7 +1,5 @@
 import {
   ContractMailOutput,
-  Encryption,
-  Envelope,
   EthereumTransactionResponse,
   Mailable,
   MailReadyChain,
@@ -59,6 +57,8 @@ export class Mail extends MailContract implements Mailable {
       storedEnvelope.checksum,
       storedEnvelope.metadata,
     );
+
+    await this.appendAppRequiredFee(populatedTx);
 
     // Track transaction state
     if (options.onStateChange) {

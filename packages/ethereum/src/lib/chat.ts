@@ -66,6 +66,8 @@ export class Chat extends ChatContract {
       metadata,
     );
 
+    await this.appendAppRequiredFee(populatedTx);
+
     return this.sendTransaction(populatedTx);
   }
 
@@ -96,6 +98,8 @@ export class Chat extends ChatContract {
       message.content,
       metadata,
     );
+
+    await this.appendAppRequiredFee(populatedTx);
 
     return this.sendTransaction(populatedTx);
   }

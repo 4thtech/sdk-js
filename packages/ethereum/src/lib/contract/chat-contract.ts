@@ -1,22 +1,16 @@
-import { ethers } from 'ethers';
-import { BaseContract } from './base-contract';
 import { ChatConfig } from '../chat';
 import chatAbi from './abi/chat-abi.json';
 import {
   ContractConversationOutput,
   ContractMessageOutput,
   Conversation,
-  Encryption,
-  Message,
   MessageMetaData,
   MessageSentEventOutput,
   ReceivedMessage,
-  RemoteFileMetaData,
 } from '@4thtech-sdk/types';
+import { FeeCollectorContract } from './fee-collector-contract';
 
-export class ChatContract extends BaseContract {
-  protected appId: string;
-
+export class ChatContract extends FeeCollectorContract {
   constructor(config: ChatConfig) {
     const { signer, chain, appId } = config;
 
@@ -27,9 +21,8 @@ export class ChatContract extends BaseContract {
         abi: chain.contracts.chat.abi ?? JSON.stringify(chatAbi),
       },
       chain,
+      appId,
     });
-
-    this.appId = appId ?? ethers.utils.hexZeroPad('0x0', 32);
   }
 
   // protected async encryptMessage(message: Message, encryption: Encryption): Promise<Message> {

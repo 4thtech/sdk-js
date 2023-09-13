@@ -10,7 +10,7 @@ import { Contract, getDefaultProvider } from 'ethers';
 import { PopulatedTransaction } from '@ethersproject/contracts';
 import { hexlify } from 'ethers/lib/utils';
 
-type BaseContractConfig = {
+export type BaseContractConfig = {
   signer: Signer;
   contractParams: RequiredContractParams;
   chain: Chain;
@@ -39,7 +39,6 @@ export class BaseContract {
   ): Promise<EthereumTransactionRequest> {
     return {
       ...populatedTx,
-      value: 0, // TODO: add fee?
       gasPrice: await this.provider.getGasPrice(),
       // TODO: do proper estimation, test this => (await this.provider.estimateGas(populatedTx)).toNumber()
       gasLimit: hexlify(950000),

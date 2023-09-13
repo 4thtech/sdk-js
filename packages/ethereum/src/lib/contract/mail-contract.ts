@@ -14,15 +14,13 @@ import {
   RemoteFileInfo,
   TransactionHash,
 } from '@4thtech-sdk/types';
-import { BaseContract } from './base-contract';
 import mailsAbi from './abi/mails-abi.json';
 import { RemoteStorage } from '@4thtech-sdk/storage';
-import { ethers } from 'ethers';
 import { MailConfig } from '@4thtech-sdk/ethereum';
+import { FeeCollectorContract } from './fee-collector-contract';
 
-export class MailContract extends BaseContract {
+export class MailContract extends FeeCollectorContract {
   protected remoteStorage: RemoteStorage;
-  protected appId: string;
 
   constructor(config: MailConfig) {
     const { signer, chain, remoteStorageProvider, appId, encryptionHandler } = config;
@@ -34,14 +32,13 @@ export class MailContract extends BaseContract {
         abi: chain.contracts.mail.abi ?? JSON.stringify(mailsAbi),
       },
       chain,
+      appId,
     });
 
     this.remoteStorage = new RemoteStorage({
       storageProvider: remoteStorageProvider,
       encryptionHandler,
     });
-
-    this.appId = appId ?? ethers.utils.hexZeroPad('0x0', 32);
   }
 
   protected async processContractMailOutputs(
