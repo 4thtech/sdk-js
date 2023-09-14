@@ -34,7 +34,34 @@ export class BaseContract {
     this.contract = new Contract(contractParams.address, contractParams.abi, this.provider);
   }
 
-  protected async prepareTransactionData(
+  protected async sendTransaction(
+    populatedTx: PopulatedTransaction,
+  ): Promise<EthereumTransactionResponse | object> {
+    if (this.signer.sendTransaction) {
+      return this.sendTransactionExternally(populatedTx);
+    }
+
+    return this.sendTransactionInternally(populatedTx);
+  }
+
+  private async sendTransactionExternally(populatedTx: PopulatedTransaction): Promise<object> {
+    if (!this.signer.sendTransaction) {
+      throw new Error('Signer does not support sendTransaction method');
+    }
+
+    return this.signer.sendTransaction(populatedTx);
+  }
+
+  private async sendTransactionInternally(
+    populatedTx: PopulatedTransaction,
+  ): Promise<EthereumTransactionResponse> {
+    const transactionRequest = await this.getFullyPopulatedTransactionRequest(populatedTx);
+    const signedTransaction = await this.signer.signTransaction(transactionRequest);
+
+    return this.provider.sendTransaction(signedTransaction);
+  }
+
+  private async getFullyPopulatedTransactionRequest(
     populatedTx: PopulatedTransaction,
   ): Promise<EthereumTransactionRequest> {
     return {
@@ -45,18 +72,5 @@ export class BaseContract {
       chainId: this.chain.id,
       nonce: await this.provider.getTransactionCount(this.signer.getAddress()),
     };
-  }
-
-  protected async sendTransaction(
-    populatedTx: PopulatedTransaction,
-  ): Promise<EthereumTransactionResponse | object> {
-    if (this.signer.sendTransaction) {
-      return this.signer.sendTransaction(populatedTx);
-    }
-
-    const prepareTransaction = await this.prepareTransactionData(populatedTx);
-    const signedTransaction = await this.signer.signTransaction(prepareTransaction);
-
-    return this.provider.sendTransaction(signedTransaction);
   }
 }
