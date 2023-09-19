@@ -34,6 +34,10 @@ export class BaseContract {
     this.contract = new Contract(contractParams.address, contractParams.abi, this.provider);
   }
 
+  protected async getSignerAddress(): Promise<string> {
+    return this.signer.getAddress();
+  }
+
   protected async sendTransaction(
     populatedTx: PopulatedTransaction,
   ): Promise<EthereumTransactionResponse | object> {
@@ -68,7 +72,7 @@ export class BaseContract {
       ...populatedTx,
       gasPrice: await this.provider.getGasPrice(),
       // TODO: do proper estimation, test this => (await this.provider.estimateGas(populatedTx)).toNumber()
-      gasLimit: hexlify(950000),
+      gasLimit: hexlify(5950000),
       chainId: this.chain.id,
       nonce: await this.provider.getTransactionCount(this.signer.getAddress()),
     };

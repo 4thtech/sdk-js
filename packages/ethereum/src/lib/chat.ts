@@ -10,10 +10,10 @@ import {
   ReceivedMessage,
   Signer,
 } from '@4thtech-sdk/types';
-import { EncryptionHandler } from '@4thtech-sdk/encryption';
 import { ChatContract } from './contract/chat-contract';
 import { BigNumber, BigNumberish } from 'ethers';
 import { arrayify, getAddress, keccak256 } from 'ethers/lib/utils';
+import { Encryptor } from './encryptor';
 
 /**
  * Configuration for the Chat class.
@@ -22,13 +22,13 @@ import { arrayify, getAddress, keccak256 } from 'ethers/lib/utils';
  * @property {Signer} signer The signer instance.
  * @property {ChatReadyChain} chain A chat-ready blockchain instance.
  * @property {string} appId The application’s identifier.
- * @property {EncryptionHandler} encryptionHandler A handler for message encryption.
+ * @property {Encryptor} encryptor Optional Encryptor service which is used for message encryption/decryption.
  */
 export type ChatConfig = {
   signer: Signer;
   chain: ChatReadyChain;
   appId?: string;
-  encryptionHandler?: EncryptionHandler;
+  encryptor?: Encryptor;
 };
 
 /**
@@ -53,17 +53,22 @@ export class Chat extends ChatContract {
     message: Message,
     encryptMessage = true,
   ): Promise<EthereumTransactionResponse> {
-    const metadata: MessageMetaData = {};
+    let { content } = message;
+    let metaData: MessageMetaData = {};
+
     if (encryptMessage) {
-      // TODO: initialize encryptor aes encryption (ECDH)
-      // message = await this.encryptMessage(message, encryption);
+      const encryption = await this.getEncryptionForOneToOneConversation(receiver);
+      const encryptedMessage = await this.encryptMessage(message, encryption);
+
+      content = encryptedMessage.content;
+      metaData = encryptedMessage.metadata;
     }
 
     const populatedTx = await this.contract.populateTransaction['sendMessage'](
       this.appId,
       receiver,
-      message.content,
-      metadata,
+      content,
+      this.encodeMetaData<MessageMetaData>(metaData),
     );
 
     await this.appendAppRequiredFee(populatedTx);
@@ -84,19 +89,23 @@ export class Chat extends ChatContract {
     message: Message,
     encryptMessage = true,
   ): Promise<EthereumTransactionResponse> {
-    const metadata: MessageMetaData = {};
+    let { content } = message;
+    let metaData: MessageMetaData = {};
+
     if (encryptMessage) {
-      // TODO: initialize encryption;
-      //  - set aes encryption if it is a group conversation
-      //  - otherwise set encryptor aes encryption (ECDH)
-      // message = await this.encryptMessage(message, encryption);
+      const conversation = await this.fetchConversation(conversationHash); // TODO: read from cache
+      const encryption = await this.getEncryptionForConversation(conversation);
+      const encryptedMessage = await this.encryptMessage(message, encryption);
+
+      content = encryptedMessage.content;
+      metaData = encryptedMessage.metadata;
     }
 
     const populatedTx = await this.contract.populateTransaction['addMessageToConversation'](
       this.appId,
       conversationHash,
-      message.content,
-      metadata,
+      content,
+      this.encodeMetaData<MessageMetaData>(metaData),
     );
 
     await this.appendAppRequiredFee(populatedTx);
@@ -128,22 +137,32 @@ export class Chat extends ChatContract {
    *
    * @param {string} conversationName The name of the new group conversation.
    * @param {boolean} isOnlyCreatorAllowedToAddMembers Specifies whether only the creator can add members to the group conversation.
+   * @param {boolean} isEncrypted Specifies whether the group conversation should be encrypted.
    * @param {string[]} members The initial members of the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async createGroupConversation(
     conversationName: string,
     isOnlyCreatorAllowedToAddMembers: boolean,
+    isEncrypted: boolean,
     members: string[],
   ): Promise<EthereumTransactionResponse> {
-    // TODO: randomly generate secret key and encrypt it for each member
-    const creatorEncryptedSecretKey = '';
-    const membersEncryptedSecretKeys: string[] = [];
+    let creatorEncryptedSecretKey = '';
+    let membersEncryptedSecretKeys: string[] = [];
+
+    if (isEncrypted) {
+      const secretKey = await this.generateSecretKey();
+      const creatorAddress = await this.getSignerAddress();
+
+      creatorEncryptedSecretKey = await this.encryptSecretKey(secretKey, creatorAddress);
+      membersEncryptedSecretKeys = await this.encryptSecretKeyForMembers(secretKey, members);
+    }
 
     const populatedTx = await this.contract.populateTransaction['createGroupConversation'](
       this.appId,
       conversationName,
       isOnlyCreatorAllowedToAddMembers,
+      isEncrypted,
       members,
       membersEncryptedSecretKeys,
       creatorEncryptedSecretKey,
@@ -311,7 +330,7 @@ export class Chat extends ChatContract {
       'getConversationMessagesPaginated'
     ](conversationHash, pageNumber, pageSize);
 
-    return this.processContractMessageOutputs(contractMessageOutputs);
+    return this.processContractMessageOutputs(contractMessageOutputs, conversationHash);
   }
 
   /**
@@ -322,25 +341,6 @@ export class Chat extends ChatContract {
    */
   public async getUserAppIds(user: string): Promise<string[]> {
     return this.contract['getUserAppIds'](user);
-  }
-
-  /**
-   * Retrieves the encryption secret key for a specific user within a given conversation.
-   *
-   * @param {string} conversationHash - The target conversation's hash.
-   * @param {string} user - The target user address of the user for whom the secret key needs to be retrieved.
-   * @returns {Promise<string>} Returns a promise that resolves to the encryption secret key for the specified user in the given conversation.
-   */
-  public async getEncryptionSecretKeyForGroupConversation(
-    conversationHash: string,
-    user: string,
-  ): Promise<string> {
-    const encryptedSecretKey = await this.contract['getEncryptedSecretKey'](conversationHash, user);
-
-    // TODO: decrypt encryptedSecretKey
-    const encryptionSecretKey = '';
-
-    return encryptionSecretKey;
   }
 
   /**
@@ -372,7 +372,10 @@ export class Chat extends ChatContract {
           isDeleted,
         };
 
-        callback(conversationHash, this.processContractMessageOutput(eventOutput));
+        callback(
+          conversationHash,
+          await this.processContractMessageOutput(eventOutput, conversationHash),
+        );
       },
     );
   }

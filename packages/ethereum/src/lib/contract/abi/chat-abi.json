@@ -410,6 +410,11 @@
         "type": "bool"
       },
       {
+        "internalType": "bool",
+        "name": "isEncrypted",
+        "type": "bool"
+      },
+      {
         "internalType": "address[]",
         "name": "members",
         "type": "address[]"
@@ -524,46 +529,14 @@
             "type": "bool"
           },
           {
+            "internalType": "bool",
+            "name": "isEncrypted",
+            "type": "bool"
+          },
+          {
             "internalType": "address[]",
             "name": "members",
             "type": "address[]"
-          },
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-              },
-              {
-                "internalType": "string",
-                "name": "content",
-                "type": "string"
-              },
-              {
-                "internalType": "uint256",
-                "name": "sentAt",
-                "type": "uint256"
-              },
-              {
-                "internalType": "string",
-                "name": "metadata",
-                "type": "string"
-              },
-              {
-                "internalType": "uint256",
-                "name": "index",
-                "type": "uint256"
-              },
-              {
-                "internalType": "bool",
-                "name": "isDeleted",
-                "type": "bool"
-              }
-            ],
-            "internalType": "struct Chat.Message[]",
-            "name": "messages",
-            "type": "tuple[]"
           }
         ],
         "internalType": "struct Chat.Conversation",
@@ -702,46 +675,14 @@
             "type": "bool"
           },
           {
+            "internalType": "bool",
+            "name": "isEncrypted",
+            "type": "bool"
+          },
+          {
             "internalType": "address[]",
             "name": "members",
             "type": "address[]"
-          },
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-              },
-              {
-                "internalType": "string",
-                "name": "content",
-                "type": "string"
-              },
-              {
-                "internalType": "uint256",
-                "name": "sentAt",
-                "type": "uint256"
-              },
-              {
-                "internalType": "string",
-                "name": "metadata",
-                "type": "string"
-              },
-              {
-                "internalType": "uint256",
-                "name": "index",
-                "type": "uint256"
-              },
-              {
-                "internalType": "bool",
-                "name": "isDeleted",
-                "type": "bool"
-              }
-            ],
-            "internalType": "struct Chat.Message[]",
-            "name": "messages",
-            "type": "tuple[]"
           }
         ],
         "internalType": "struct Chat.Conversation[]",

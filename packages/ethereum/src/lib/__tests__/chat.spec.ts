@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { TestSigner } from './utils.spec';
+import { prepareEncryptor, TestSigner } from './utils.spec';
 import { BigNumber } from 'ethers';
 import { Chat } from '../chat';
 import { localhost } from '../chains';
@@ -21,7 +21,7 @@ const testChain = localhost;
 
 // Define chat objects
 const chat = new Chat({
-  signer: signer,
+  signer,
   chain: testChain as ChatReadyChain,
 });
 
@@ -39,10 +39,14 @@ describe('Chat', () => {
       content: 'Test Message',
     };
     conversationHash = chat.calculateConversationHash(senderAddress, receiverAddress);
-    messageCountBefore = await chat.countMessages(conversationHash);
   });
 
-  async function testMessageReception(sendFunction: () => Promise<EthereumTransactionResponse>) {
+  async function testMessageReception(
+    chat: Chat,
+    sendFunction: () => Promise<EthereumTransactionResponse>,
+  ) {
+    messageCountBefore = await chat.countMessages(conversationHash);
+
     const txResponse = await sendFunction();
 
     expect(txResponse.hash).toBeDefined();
@@ -69,102 +73,180 @@ describe('Chat', () => {
   }
 
   describe('Storing', () => {
-    it('Should send and store messages correctly', async () => {
-      await testMessageReception(() => chat.sendMessage(receiverAddress, message));
-    });
+    describe('One-to-one Conversations', () => {
+      describe('Unencrypted messages', () => {
+        it('Should send and store message correctly', async () => {
+          await testMessageReception(chat, () => chat.sendMessage(receiverAddress, message, false));
+        });
 
-    it('Should add messages to conversations', async () => {
-      await testMessageReception(() => chat.addMessageToConversation(conversationHash, message));
-    });
+        it('Should add message to one-to-one conversations', async () => {
+          await testMessageReception(chat, () =>
+            chat.addMessageToConversation(conversationHash, message, false),
+          );
+        });
+      });
 
-    it('Should delete message', async () => {
-      await chat.sendMessage(receiverAddress, message);
-      const messageCount = await chat.countMessages(conversationHash);
-      const messageIndex = messageCount.sub(1);
+      describe('Encrypted messages', async () => {
+        const encryptor = await prepareEncryptor(signer, testChain);
+        await prepareEncryptor(receiver, testChain);
 
-      await chat.deleteMessage(conversationHash, messageIndex);
+        const chat = new Chat({
+          signer,
+          chain: testChain as ChatReadyChain,
+          encryptor,
+        });
 
-      const receivedMessages = await chat.fetchConversationMessagesPaginated(
-        conversationHash,
-        messageCount,
-        1,
-      );
+        it('Should send and store message correctly', async () => {
+          await testMessageReception(chat, () => chat.sendMessage(receiverAddress, message));
+        });
 
-      expect(receivedMessages[0].content).to.be.equal('');
-      expect(receivedMessages[0].isDeleted).to.be.equal(true);
-    });
+        it('Should add message to one-to-one conversations', async () => {
+          await testMessageReception(chat, () =>
+            chat.addMessageToConversation(conversationHash, message),
+          );
+        });
+      });
 
-    it('Should remove conversation', async () => {
-      await chat.sendMessage(receiverAddress, message);
-      await chat.removeConversation(conversationHash);
+      it('Should delete message', async () => {
+        await chat.sendMessage(receiverAddress, message, false);
+        const messageCount = await chat.countMessages(conversationHash);
+        const messageIndex = messageCount.sub(1);
 
-      expect(chat.fetchConversation(conversationHash)).rejects.toThrowError(
-        'Chat: the conversation does not exist',
-      );
+        await chat.deleteMessage(conversationHash, messageIndex);
+
+        const receivedMessages = await chat.fetchConversationMessagesPaginated(
+          conversationHash,
+          messageCount,
+          1,
+        );
+
+        expect(receivedMessages[0].content).to.be.equal('');
+        expect(receivedMessages[0].isDeleted).to.be.equal(true);
+      });
+
+      it('Should remove conversation', async () => {
+        await chat.sendMessage(receiverAddress, message, false);
+        await chat.removeConversation(conversationHash);
+
+        expect(chat.fetchConversation(conversationHash)).rejects.toThrowError(
+          'Chat: the conversation does not exist',
+        );
+      });
     });
 
     describe('Group Conversations', () => {
-      const conversationName = 'Group Conversation';
-      let lastConversation: Conversation;
+      describe('Unencrypted', () => {
+        const conversationName = 'Group Conversation';
+        let lastConversation: Conversation;
 
-      beforeEach(async () => {
-        const members = [await receiver.getAddress()];
+        beforeEach(async () => {
+          const members = [await receiver.getAddress()];
 
-        await chat.createGroupConversation(conversationName, true, members);
+          await chat.createGroupConversation(conversationName, true, false, members);
 
-        const conversations = await chat.fetchConversations(senderAddress);
+          const conversations = await chat.fetchConversations(senderAddress);
 
-        if (conversations.length) {
-          lastConversation = conversations[conversations.length - 1];
-        }
+          if (conversations.length) {
+            lastConversation = conversations[conversations.length - 1];
+            conversationHash = lastConversation.hash;
+          }
+        });
+
+        it('Should create group conversation', async () => {
+          expect(lastConversation).toBeDefined();
+          expect(lastConversation?.isGroup).to.be.equal(true);
+          expect(lastConversation?.name).to.be.equal(conversationName);
+        });
+
+        it('Should add members to group conversation', async () => {
+          await chat.addMembersToGroupConversation(lastConversation.hash, [
+            await member1.getAddress(),
+            await member2.getAddress(),
+          ]);
+          const conversation = await chat.fetchConversation(lastConversation.hash);
+
+          expect(conversation.members.length).to.be.equal(4);
+        });
+
+        it('Should remove member from group conversation', async () => {
+          await chat.removeMemberFromGroupConversation(
+            lastConversation.hash,
+            await receiver.getAddress(),
+          );
+          const conversation = await chat.fetchConversation(lastConversation.hash);
+
+          expect(conversation.members.length).to.be.equal(lastConversation.members.length - 1);
+        });
+
+        it('Should remove members from group conversation', async () => {
+          await chat.addMembersToGroupConversation(lastConversation.hash, [
+            await member1.getAddress(),
+            await member2.getAddress(),
+          ]);
+          const conversationBefore = await chat.fetchConversation(lastConversation.hash);
+          await chat.removeMembersFromGroupConversation(lastConversation.hash, [
+            await receiver.getAddress(),
+            await member1.getAddress(),
+          ]);
+          const conversationAfter = await chat.fetchConversation(lastConversation.hash);
+
+          expect(conversationAfter.members.length).to.be.equal(
+            conversationBefore.members.length - 2,
+          );
+        });
+
+        it('Should add message to a group conversations', async () => {
+          await testMessageReception(chat, () =>
+            chat.addMessageToConversation(lastConversation.hash, message, false),
+          );
+        });
       });
 
-      it('Should create group conversation', async () => {
-        expect(lastConversation).toBeDefined();
-        expect(lastConversation?.isGroup).to.be.equal(true);
-        expect(lastConversation?.name).to.be.equal(conversationName);
-      });
+      describe('Encrypted', async () => {
+        const conversationName = 'Encrypted Group Conversation';
+        let lastConversation: Conversation;
 
-      it('Should add members to group conversation', async () => {
-        await chat.addMembersToGroupConversation(lastConversation.hash, [
-          await member1.getAddress(),
-          await member2.getAddress(),
-        ]);
-        const conversation = await chat.fetchConversation(lastConversation.hash);
+        const encryptor = await prepareEncryptor(signer, testChain);
+        await prepareEncryptor(receiver, testChain);
 
-        expect(conversation.members.length).to.be.equal(4);
-      });
+        const chat = new Chat({
+          signer,
+          chain: testChain as ChatReadyChain,
+          encryptor,
+        });
 
-      it('Should remove member from group conversation', async () => {
-        await chat.removeMemberFromGroupConversation(
-          lastConversation.hash,
-          await receiver.getAddress(),
-        );
-        const conversation = await chat.fetchConversation(lastConversation.hash);
+        beforeEach(async () => {
+          const members = [await receiver.getAddress()];
 
-        expect(conversation.members.length).to.be.equal(lastConversation.members.length - 1);
-      });
+          await chat.createGroupConversation(conversationName, true, true, members);
 
-      it('Should remove members from group conversation', async () => {
-        await chat.addMembersToGroupConversation(lastConversation.hash, [
-          await member1.getAddress(),
-          await member2.getAddress(),
-        ]);
-        const conversationBefore = await chat.fetchConversation(lastConversation.hash);
-        await chat.removeMembersFromGroupConversation(lastConversation.hash, [
-          await receiver.getAddress(),
-          await member1.getAddress(),
-        ]);
-        const conversationAfter = await chat.fetchConversation(lastConversation.hash);
+          const conversations = await chat.fetchConversations(senderAddress);
 
-        expect(conversationAfter.members.length).to.be.equal(conversationBefore.members.length - 2);
+          if (conversations.length) {
+            lastConversation = conversations[conversations.length - 1];
+            conversationHash = lastConversation.hash;
+          }
+        });
+
+        it('Should add encrypted message to a group conversations', async () => {
+          // Test on clean chat instance which doesn't have initialized any encryption's
+          const chatClean = new Chat({
+            signer,
+            chain: testChain as ChatReadyChain,
+            encryptor,
+          });
+
+          await testMessageReception(chatClean, () =>
+            chat.addMessageToConversation(lastConversation.hash, message),
+          );
+        });
       });
     });
   });
 
   describe('Retrieving', () => {
     beforeEach(async () => {
-      await chat.sendMessage(receiverAddress, message);
+      await chat.sendMessage(receiverAddress, message, false);
     });
 
     it('Should fetch conversation hashes', async () => {
@@ -179,7 +261,7 @@ describe('Chat', () => {
 
       expect(conversation).toBeDefined();
       expect(conversation.members.length).to.be.greaterThanOrEqual(2);
-      expect(conversation.messages.length).to.be.greaterThanOrEqual(1);
+      expect((await chat.countMessages(conversationHash)).toNumber()).to.be.greaterThanOrEqual(1);
     });
 
     it('Should fetch conversations', async () => {
@@ -208,15 +290,6 @@ describe('Chat', () => {
       expect(senderAppIds.length).to.be.equal(1);
       expect(receiverAppIds.length).to.be.equal(1);
     });
-
-    it('Should get user encryption secret key for a group conversation', async () => {
-      const senderEncryptedSecretKeyData = await chat.getEncryptionSecretKeyForGroupConversation(
-        conversationHash,
-        senderAddress,
-      );
-
-      console.log(senderEncryptedSecretKeyData);
-    });
   });
 
   describe('Events', () => {
@@ -226,7 +299,7 @@ describe('Chat', () => {
         console.log(receivedMessage);
       });
 
-      await chat.sendMessage(receiverAddress, message);
+      await chat.sendMessage(receiverAddress, message, false);
     });
 
     it('Should emit event on message deleted', async () => {
@@ -236,7 +309,7 @@ describe('Chat', () => {
         console.log(index);
       });
 
-      await chat.sendMessage(receiverAddress, message);
+      await chat.sendMessage(receiverAddress, message, false);
       const messageCount = await chat.countMessages(conversationHash);
       const messageIndex = messageCount.sub(1);
 
@@ -255,7 +328,7 @@ describe('Chat', () => {
       );
 
       const members = [await receiver.getAddress()];
-      await chat.createGroupConversation('Group Conversation', true, members);
+      await chat.createGroupConversation('Group Conversation', true, false, members);
     });
 
     it('Should emit event on conversation removed', async () => {
@@ -264,7 +337,7 @@ describe('Chat', () => {
         console.log(conversationHash);
       });
 
-      await chat.sendMessage(receiverAddress, message);
+      await chat.sendMessage(receiverAddress, message, false);
       await chat.removeConversation(conversationHash);
     });
 
@@ -276,7 +349,7 @@ describe('Chat', () => {
       });
 
       const members = [await receiver.getAddress()];
-      await chat.createGroupConversation('Group Conversation', true, members);
+      await chat.createGroupConversation('Group Conversation', true, false, members);
 
       const conversations = await chat.fetchConversations(senderAddress);
 
@@ -297,7 +370,7 @@ describe('Chat', () => {
       });
 
       const members = [await receiver.getAddress()];
-      await chat.createGroupConversation('Group Conversation', true, members);
+      await chat.createGroupConversation('Group Conversation', true, false, members);
 
       const conversations = await chat.fetchConversations(senderAddress);
 

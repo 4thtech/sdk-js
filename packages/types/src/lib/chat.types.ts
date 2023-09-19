@@ -9,11 +9,25 @@ export type Message = {
   content: string;
 };
 
+export type EncryptedMessage = {
+  content: string;
+  metadata: {
+    encryption: EncryptionMetaData;
+  };
+};
+
+export type EncryptedSecretKeyData = {
+  secretKey: string;
+  metadata: {
+    encryption: EncryptionMetaData;
+    encoding: string;
+  };
+};
+
 export type ReceivedMessage = {
   sender: string;
   content: string;
   sentAt: number;
-  metadata: MessageMetaData;
   index: number;
   isDeleted: boolean;
 };
@@ -24,8 +38,8 @@ export type Conversation = {
   name: string;
   creator: string;
   isOnlyCreatorAllowedToAddMembers: boolean;
+  isEncrypted: boolean;
   members: string[];
-  messages: ReceivedMessage[];
 };
 
 export type ContractMessageOutput = [string, string, BigNumber, string, BigNumber, boolean] & {
@@ -43,16 +57,16 @@ export type ContractConversationOutput = [
   string,
   string,
   boolean,
+  boolean,
   string[],
-  ContractMessageOutput[],
 ] & {
   hash: string;
   isGroup: boolean;
   name: string;
   creator: string;
   isOnlyCreatorAllowedToAddMembers: boolean;
+  isEncrypted: boolean;
   members: string[];
-  messages: ContractMessageOutput[];
 };
 
 export type ContractEncryptedSecretKeyDataOutput = [string, string] & {

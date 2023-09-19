@@ -35,7 +35,7 @@ export class EncryptionHandler {
     return encryption.decrypt(data, encryptionMetaData);
   }
 
-  private getEncryption(encryptionType: EncryptionType): Encryption {
+  public getEncryption(encryptionType: EncryptionType): Encryption {
     const encryption = this.encryptionMap.get(encryptionType);
 
     if (!encryption) {
