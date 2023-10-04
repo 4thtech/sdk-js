@@ -98,16 +98,16 @@ export const artheraTestnet: Chain = {
   networkEndpoint: 'https://rpc-test.arthera.net',
   contracts: {
     appFeeManager: {
-      address: '0x628DAACcC211cE0A639e6EAd89B1c63b57d633d4',
+      address: '0xE8542c55298E53D21fcCB38BB706c798Fa9471C0',
     },
     mail: {
-      address: '0x00e75F6f934e1Fb2Bd881682F33dDFA814Ef1d2b',
+      address: '0xAe95C5Be4F0b461b2e401405A186d79d7B4F7794',
     },
     chat: {
-      address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
+      address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
     },
     user: {
-      address: '0x55755C910fAC95cf9c8265Af6a971fA3746029BA',
+      address: '0xb87204487e8d45D6e60AED5eEC85FDa583E0396D',
     },
   },
 };
