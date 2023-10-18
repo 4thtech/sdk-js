@@ -111,3 +111,47 @@ export const artheraTestnet: Chain = {
     },
   },
 };
+
+export const metisGoerli: Chain = {
+  id: 599,
+  name: 'Metis Goerli',
+  network: 'metis-goerli',
+  type: NetworkType.TEST_NET,
+  networkEndpoint: 'https://goerli.gateway.metisdevops.link',
+  contracts: {
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    // chat: {
+    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+    // },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+};
+
+export const immu3Testnet: Chain = {
+  id: 3100,
+  name: 'Immu3 EVM Testnet',
+  network: 'immu3Testnet',
+  type: NetworkType.TEST_NET,
+  networkEndpoint: 'https://fraa-dancebox-3043-rpc.a.dancebox.tanssi.network',
+  contracts: {
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    // chat: {
+    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+    // },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+};
