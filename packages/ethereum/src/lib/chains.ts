@@ -13,13 +13,13 @@ export const localhost: Chain = {
       address: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     },
     mail: {
-      address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+      address: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
     },
     chat: {
       address: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
     },
     user: {
-      address: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
+      address: '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
     },
   },
 };
@@ -32,16 +32,16 @@ export const sepolia: Chain = {
   networkEndpoint: 'https://rpc.sepolia.org',
   contracts: {
     appFeeManager: {
-      address: '0x628DAACcC211cE0A639e6EAd89B1c63b57d633d4',
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
     mail: {
-      address: '0x00e75F6f934e1Fb2Bd881682F33dDFA814Ef1d2b',
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
       address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
     },
     user: {
-      address: '0x55755C910fAC95cf9c8265Af6a971fA3746029BA',
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
 };
@@ -54,16 +54,16 @@ export const polygonMumbai: Chain = {
   networkEndpoint: 'https://polygon-mumbai-bor.publicnode.com',
   contracts: {
     appFeeManager: {
-      address: '0x628DAACcC211cE0A639e6EAd89B1c63b57d633d4',
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
     mail: {
-      address: '0x00e75F6f934e1Fb2Bd881682F33dDFA814Ef1d2b',
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
       address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
     },
     user: {
-      address: '0x55755C910fAC95cf9c8265Af6a971fA3746029BA',
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
 };
@@ -76,16 +76,16 @@ export const edgewareTestnet: Chain = {
   networkEndpoint: 'https://beresheet-evm.jelliedowl.net',
   contracts: {
     appFeeManager: {
-      address: '0x628DAACcC211cE0A639e6EAd89B1c63b57d633d4',
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
     mail: {
-      address: '0x00e75F6f934e1Fb2Bd881682F33dDFA814Ef1d2b',
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
       address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
     },
     user: {
-      address: '0x55755C910fAC95cf9c8265Af6a971fA3746029BA',
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
 };
@@ -98,16 +98,16 @@ export const artheraTestnet: Chain = {
   networkEndpoint: 'https://rpc-test.arthera.net',
   contracts: {
     appFeeManager: {
-      address: '0xE8542c55298E53D21fcCB38BB706c798Fa9471C0',
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
     mail: {
-      address: '0xAe95C5Be4F0b461b2e401405A186d79d7B4F7794',
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
       address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
     },
     user: {
-      address: '0xb87204487e8d45D6e60AED5eEC85FDa583E0396D',
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
 };
