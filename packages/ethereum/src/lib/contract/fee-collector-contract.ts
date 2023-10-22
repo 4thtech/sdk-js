@@ -1,27 +1,26 @@
-import { BigNumber } from 'ethers';
 import { BaseContract, BaseContractConfig } from './base-contract';
-import { PopulatedTransaction } from '@ethersproject/contracts';
-import { hexZeroPad } from 'ethers/lib/utils';
+import { AppId, ContractAbi } from '@4thtech-sdk/types';
+import { pad } from 'viem';
+import { feeCollectorAbi } from './abi/fee-collector-abi';
 
-export type FeeCollectorContractConfig = BaseContractConfig & {
-  appId?: string;
+export type FeeCollectorContractConfig<TAbi extends ContractAbi> = BaseContractConfig<TAbi> & {
+  appId?: AppId;
 };
 
-export class FeeCollectorContract extends BaseContract {
-  private cachedAppRequiredFee?: BigNumber;
+export class FeeCollectorContract<TAbi extends ContractAbi> extends BaseContract<TAbi> {
+  private cachedAppRequiredFee?: bigint;
 
-  protected readonly appId: string;
+  protected readonly appId: AppId;
 
-  constructor(config: FeeCollectorContractConfig) {
-    const { signer, contractParams, chain, appId } = config;
+  constructor(config: FeeCollectorContractConfig<TAbi>) {
+    const { walletClient, contractConfig, appId } = config;
 
     super({
-      signer,
-      contractParams,
-      chain,
+      walletClient,
+      contractConfig,
     });
 
-    this.appId = appId ?? hexZeroPad('0x0', 32);
+    this.appId = appId ?? pad('0x0', { size: 32 });
 
     // Fetch and cache the app required fee at initialization
     this.initializeAppRequiredFee().catch((error) => {
@@ -32,19 +31,24 @@ export class FeeCollectorContract extends BaseContract {
   }
 
   private async initializeAppRequiredFee(): Promise<void> {
-    this.cachedAppRequiredFee = await this.getAppRequiredFee();
+    this.cachedAppRequiredFee = await this.fetchAppRequiredFee();
   }
 
-  protected async appendAppRequiredFee(populatedTx: PopulatedTransaction): Promise<void> {
+  protected async getAppRequiredFee(): Promise<bigint> {
     // Cache the app required fee if it has not been cached yet
     if (!this.cachedAppRequiredFee) {
-      this.cachedAppRequiredFee = await this.getAppRequiredFee();
+      this.cachedAppRequiredFee = await this.fetchAppRequiredFee();
     }
 
-    populatedTx.value = this.cachedAppRequiredFee;
+    return this.cachedAppRequiredFee;
   }
 
-  private async getAppRequiredFee(): Promise<BigNumber> {
-    return this.contract['getAppRequiredFee'](this.appId);
+  private async fetchAppRequiredFee(): Promise<bigint> {
+    return this.publicClient.readContract({
+      address: this.contractConfig.address,
+      abi: this.contractConfig.abi as typeof feeCollectorAbi,
+      functionName: 'getAppRequiredFee',
+      args: [this.appId],
+    });
   }
 }

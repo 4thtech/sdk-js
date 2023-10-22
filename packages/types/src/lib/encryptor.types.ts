@@ -12,7 +12,7 @@ type ResponseObject = {
   state: EncryptorState;
 };
 
-export type RequestCallback = (response: ResponseObject) => void;
+export type EncryptorExtensionCallback = (response: ResponseObject) => void;
 
 export interface EncryptorExtension {
   getState(): Promise<EncryptorState> | EncryptorState;

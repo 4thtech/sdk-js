@@ -1,80 +1,67 @@
 import {
-  Chain,
+  Address,
+  ContractAbi,
+  ContractConfig,
   EthereumTransactionRequest,
   EthereumTransactionResponse,
-  RequiredContractParams,
-  Signer,
+  WalletClient,
 } from '@4thtech-sdk/types';
-import { Provider } from '@ethersproject/providers';
-import { Contract, getDefaultProvider } from 'ethers';
-import { PopulatedTransaction } from '@ethersproject/contracts';
-import { hexlify } from 'ethers/lib/utils';
+import {
+  createPublicClient,
+  encodeFunctionData,
+  EncodeFunctionDataParameters,
+  http,
+  PublicClient,
+} from 'viem';
 
-export type BaseContractConfig = {
-  signer: Signer;
-  contractParams: RequiredContractParams;
-  chain: Chain;
+export type BaseContractConfig<TAbi extends ContractAbi> = {
+  walletClient: WalletClient;
+  contractConfig: ContractConfig<TAbi>;
 };
 
-export class BaseContract {
-  private readonly signer: Signer;
+export class BaseContract<TAbi extends ContractAbi> {
+  protected readonly publicClient: PublicClient;
 
-  private readonly provider: Provider;
+  private readonly walletClient: WalletClient;
 
-  private readonly chain: Chain;
+  protected readonly contractConfig: ContractConfig<TAbi>;
 
-  protected readonly contract: Contract;
+  constructor(config: BaseContractConfig<TAbi>) {
+    const { walletClient, contractConfig } = config;
 
-  constructor(config: BaseContractConfig) {
-    const { signer, contractParams, chain } = config;
-
-    this.signer = signer;
-    this.provider = this.signer.provider ?? getDefaultProvider(chain.networkEndpoint);
-    this.chain = chain;
-    this.contract = new Contract(contractParams.address, contractParams.abi, this.provider);
+    this.publicClient = createPublicClient({
+      chain: walletClient.chain,
+      transport: http(),
+    });
+    this.walletClient = walletClient;
+    this.contractConfig = contractConfig as typeof contractConfig;
   }
 
-  protected async getSignerAddress(): Promise<string> {
-    return this.signer.getAddress();
+  protected async getSignerAddress(): Promise<Address> {
+    return this.walletClient.getAddress();
   }
 
-  protected async sendTransaction(
-    populatedTx: PopulatedTransaction,
-  ): Promise<EthereumTransactionResponse | object> {
-    if (this.signer.sendTransaction) {
-      return this.sendTransactionExternally(populatedTx);
-    }
+  protected async sendContractTransaction({
+    functionName,
+    args,
+    fee,
+  }: Omit<EncodeFunctionDataParameters<ContractAbi>, 'abi'> & { fee?: bigint }) {
+    const encodedData = encodeFunctionData({
+      abi: this.contractConfig.abi,
+      functionName,
+      args,
+    } as unknown as EncodeFunctionDataParameters<ContractAbi>);
 
-    return this.sendTransactionInternally(populatedTx);
+    return this.sendTransaction({
+      data: encodedData,
+      to: this.contractConfig.address,
+      value: fee,
+    });
   }
 
-  private async sendTransactionExternally(populatedTx: PopulatedTransaction): Promise<object> {
-    if (!this.signer.sendTransaction) {
-      throw new Error('Signer does not support sendTransaction method');
-    }
-
-    return this.signer.sendTransaction(populatedTx);
-  }
-
-  private async sendTransactionInternally(
-    populatedTx: PopulatedTransaction,
+  private async sendTransaction(
+    transactionRequest: EthereumTransactionRequest,
   ): Promise<EthereumTransactionResponse> {
-    const transactionRequest = await this.getFullyPopulatedTransactionRequest(populatedTx);
-    const signedTransaction = await this.signer.signTransaction(transactionRequest);
-
-    return this.provider.sendTransaction(signedTransaction);
-  }
-
-  private async getFullyPopulatedTransactionRequest(
-    populatedTx: PopulatedTransaction,
-  ): Promise<EthereumTransactionRequest> {
-    return {
-      ...populatedTx,
-      gasPrice: await this.provider.getGasPrice(),
-      // TODO: do proper estimation, test this => (await this.provider.estimateGas(populatedTx)).toNumber()
-      gasLimit: hexlify(5950000),
-      chainId: this.chain.id,
-      nonce: await this.provider.getTransactionCount(this.signer.getAddress()),
-    };
+    return this.walletClient.sendTransaction(transactionRequest);
   }
 }

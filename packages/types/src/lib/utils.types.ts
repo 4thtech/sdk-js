@@ -3,9 +3,7 @@ export type PromiseFulfilledResult<T> = {
   value: T;
 };
 
-export type PromiseRejectedResult = {
+export type PromiseRejectedResult<T = unknown> = {
   status: 'rejected';
-  reason: any;
+  reason: T;
 };
-
-export type BinaryLike = string | NodeJS.ArrayBufferView;

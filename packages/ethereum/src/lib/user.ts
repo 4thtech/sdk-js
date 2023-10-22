@@ -1,15 +1,9 @@
 import { UserContract } from './contract/user-contract';
-import {
-  ContractUserOutput,
-  EthereumTransactionResponse,
-  Signer,
-  UserReadyChain,
-  UserStruct,
-} from '@4thtech-sdk/types';
+import { Address, EthereumTransactionResponse, UserStruct, WalletClient } from '@4thtech-sdk/types';
+import { WatchContractEventReturnType } from 'viem';
 
 export type UserConfig = {
-  signer: Signer;
-  chain: UserReadyChain;
+  walletClient: WalletClient;
 };
 
 /**
@@ -35,38 +29,45 @@ export class User extends UserContract {
     publicKey: string,
     publicKeyType: string,
   ): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction['setUserEncryptionPublicKey'](
-      publicKey,
-      publicKeyType,
-    );
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'setUserEncryptionPublicKey',
+      args: [publicKey, publicKeyType],
+    });
   }
 
   /**
    * Fetches a specific user.
-   * @param {string} user The user address.
-   * @returns {Promise<UserStruct | undefined>} A promise that resolves to user structure or undefined.
+   * @param {Address} user The user address.
+   * @returns {Promise<UserStruct>} A promise that resolves to user structure.
    */
-  public async fetch(user: string): Promise<UserStruct | undefined> {
-    const contractUserOutput: ContractUserOutput = await this.contract['getUser'](user);
-
-    return contractUserOutput ? this.processContractUserOutput(contractUserOutput) : undefined;
+  public async fetch(user: Address): Promise<UserStruct> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getUser',
+      args: [user],
+    });
   }
 
   /**
    * Listener for when encryption public key is set event.
-   * @param {string} user The user address.
+   * @param {Address | undefined} user The user address.
    * @param {Function} callback A callback function.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onEncryptionPublicKeySet(
-    user: string,
-    callback: (user: string, publicKey: string, publicKeyType: string) => void,
-  ): void {
-    const filter = this.contract.filters['EncryptionPublicKeySet'](user);
-
-    this.contract.on(filter, (user, publicKey, publicKeyType) => {
-      callback(user, publicKey, publicKeyType);
+    user: Address | undefined,
+    callback: (user: Address, publicKey: string, publicKeyType: string) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'EncryptionPublicKeySet',
+      args: { user },
+      onLogs: (logs) =>
+        logs.forEach(({ args: { user, publicKey, publicKeyType } }) => {
+          if (user && publicKey && publicKeyType) {
+            callback(user, publicKey, publicKeyType);
+          }
+        }),
     });
   }
 }

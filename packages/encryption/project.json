@@ -30,7 +30,7 @@
     },
     "test": {
       "executor": "@nrwl/vite:test",
-      "outputs": ["coverage/packages/encryption"],
+      "outputs": ["{workspaceRoot}/coverage/packages/encryption"],
       "options": {
         "passWithNoTests": true,
         "reportsDirectory": "../../coverage/packages/encryption"

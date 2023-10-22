@@ -30,7 +30,7 @@
     },
     "test": {
       "executor": "@nrwl/vite:test",
-      "outputs": ["coverage/packages/storage"],
+      "outputs": ["{workspaceRoot}/coverage/packages/storage"],
       "options": {
         "passWithNoTests": true,
         "reportsDirectory": "../../coverage/packages/storage"

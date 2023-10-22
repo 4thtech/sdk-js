@@ -1,32 +1,20 @@
 import { BaseContract } from './base-contract';
-import { ContractUserOutput, UserStruct } from '@4thtech-sdk/types';
-import usersAbi from './abi/users-abi.json';
+import { usersAbi } from './abi/users-abi';
 import { UserConfig } from '../user';
+import { validateChainContractExistence } from '../utils';
 
-export class UserContract extends BaseContract {
+export class UserContract extends BaseContract<typeof usersAbi> {
   constructor(config: UserConfig) {
-    const { signer, chain } = config;
+    const { walletClient } = config;
+
+    validateChainContractExistence(walletClient.chain.contracts, 'user');
 
     super({
-      signer,
-      contractParams: {
-        address: chain.contracts.user.address,
-        abi: chain.contracts.user.abi ?? JSON.stringify(usersAbi),
+      walletClient,
+      contractConfig: {
+        address: walletClient.chain.contracts.user.address,
+        abi: usersAbi,
       },
-      chain,
     });
-  }
-
-  protected async processContractUserOutput(
-    contractUserOutput: ContractUserOutput,
-  ): Promise<UserStruct> {
-    const { encryptionPublicKey } = contractUserOutput;
-
-    return {
-      encryptionPublicKey: {
-        publicKey: encryptionPublicKey.publicKey,
-        publicKeyType: encryptionPublicKey.publicKeyType,
-      },
-    };
   }
 }

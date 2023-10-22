@@ -1,24 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { UserReadyChain } from '@4thtech-sdk/types';
-import { TestSigner } from './utils.spec';
+import { TestWalletClient } from './utils.spec';
 import { User } from '../user';
-import { localhost } from '../chains';
 
 // Initialize signer
-const signer = new TestSigner();
-const receiver = new TestSigner(1);
-
-// Define chain
-const testChain = localhost;
+const signer = new TestWalletClient();
 
 const user = new User({
-  signer,
-  chain: testChain as UserReadyChain,
+  walletClient: signer,
 });
 
 // Define test data
-const encryptionPublicKey = '0x03ae304f1b719ad189bde744696dd60b264e0367a4cac582ff59d8dd69b63607d5';
-const encryptionPublicKeyType = 'BL_ENCRYPTOR_EC';
+const encryptionPublicKey =
+  '0x048318535b54105d4a7aae60c08fc45f9687181b4fdfc625bd1a753fa7397fed753547f11ca8696646f2f3acb08e31016afac23e630c5d11f59f61fef57b0d2aa5';
+const encryptionPublicKeyType = 'TEST_ENCRYPTOR_EC';
 
 describe('User', () => {
   describe('Storing', () => {

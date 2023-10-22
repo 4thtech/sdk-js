@@ -1,26 +1,29 @@
 import {
+  Address,
+  AppId,
   ContractMailOutput,
+  ContractMailOutputs,
   EthereumTransactionResponse,
   Mailable,
-  MailReadyChain,
+  MailDeletedEventOutput,
+  MailOpenedEventOutput,
   MailSendOptions,
   MailSendState,
   MailSentEventOutput,
   ReceivedEnvelope,
   RemoteFileInfo,
-  Signer,
   TransactionHash,
+  WalletClient,
 } from '@4thtech-sdk/types';
-import { BigNumber, BigNumberish } from 'ethers';
 import { MailContract } from './contract/mail-contract';
 import { RemoteStorageProvider } from '@4thtech-sdk/storage';
 import { EncryptionHandler } from '@4thtech-sdk/encryption';
+import { WatchContractEventReturnType } from 'viem';
 
 export type MailConfig = {
-  signer: Signer;
-  chain: MailReadyChain;
+  walletClient: WalletClient;
   remoteStorageProvider: RemoteStorageProvider;
-  appId?: string;
+  appId?: AppId;
   encryptionHandler?: EncryptionHandler;
 };
 
@@ -50,114 +53,108 @@ export class Mail extends MailContract implements Mailable {
   public async send(options: MailSendOptions): Promise<EthereumTransactionResponse> {
     const storedEnvelope = await this.storeEnvelope(options);
 
-    const populatedTx = await this.contract.populateTransaction['sendMail'](
-      this.appId,
-      options.envelope.receiver,
-      storedEnvelope.URL,
-      storedEnvelope.checksum,
-      storedEnvelope.metadata,
-    );
-
-    await this.appendAppRequiredFee(populatedTx);
-
     // Track transaction state
     if (options.onStateChange) {
       options.onStateChange(MailSendState.SENDING_TRANSACTION);
     }
 
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'sendMail',
+      args: [
+        this.appId,
+        options.envelope.receiver,
+        storedEnvelope.URL,
+        storedEnvelope.checksum,
+        storedEnvelope.metadata,
+      ],
+      fee: await this.getAppRequiredFee(),
+    });
   }
 
   /**
    * Set opened time for a specific mail. This method can only perform a receiver of the mail.
-   * @param {BigNumberish} mailIndex - The index of the mail to set opened time.
+   * @param {BigInt} mailIndex - The index of the mail to set opened time.
    * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
    */
-  public async setOpenedAt(mailIndex: BigNumberish): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction['setOpenedAt'](
-      this.appId,
-      mailIndex,
-    );
-
-    return this.sendTransaction(populatedTx);
+  public async setOpenedAt(mailIndex: bigint): Promise<EthereumTransactionResponse> {
+    return this.sendContractTransaction({
+      functionName: 'setOpenedAt',
+      args: [this.appId, mailIndex],
+    });
   }
 
   /**
    *  Deletes a specific mail. This method can only perform a receiver of the mail.
-   * @param {BigNumberish} mailIndex - The index of the mail to be deleted.
+   * @param {BigInt} mailIndex - The index of the mail to be deleted.
    * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
    */
-  public async deleteMail(mailIndex: BigNumberish): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction['deleteMail'](
-      this.appId,
-      mailIndex,
-    );
-
-    return this.sendTransaction(populatedTx);
+  public async deleteMail(mailIndex: bigint): Promise<EthereumTransactionResponse> {
+    return this.sendContractTransaction({
+      functionName: 'deleteMail',
+      args: [this.appId, mailIndex],
+    });
   }
 
   /**
    *  Deletes multiple mails. This method can only perform a receiver of the mails.
-   * @param {BigNumberish[]} mailIndexes - The indexes of mails to be deleted.
+   * @param {BigInt[]} mailIndexes - The indexes of mails to be deleted.
    * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
    */
-  public async deleteMails(mailIndexes: BigNumberish[]): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction['deleteMails'](
-      this.appId,
-      mailIndexes,
-    );
-
-    return this.sendTransaction(populatedTx);
+  public async deleteMails(mailIndexes: bigint[]): Promise<EthereumTransactionResponse> {
+    return this.sendContractTransaction({
+      functionName: 'deleteMails',
+      args: [this.appId, mailIndexes],
+    });
   }
 
   /**
    *  Fetch a specific mail.
-   * @param {string} receiver - The mail receiver address.
-   * @param {BigNumberish} mailIndex - The index of the mail.
+   * @param {Address} receiver - The mail receiver address.
+   * @param {BigInt} mailIndex - The index of the mail.
    * @returns {Promise<ReceivedEnvelope>} The received mail Envelope.
    */
-  public async fetch(receiver: string, mailIndex: BigNumberish): Promise<ReceivedEnvelope> {
-    const contractMailOutput: ContractMailOutput = await this.contract['getMail'](
-      this.appId,
-      receiver,
-      mailIndex,
-    );
+  public async fetch(receiver: Address, mailIndex: bigint): Promise<ReceivedEnvelope> {
+    const contractMailOutput: ContractMailOutput = await this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getMail',
+      args: [this.appId, receiver, mailIndex],
+    });
 
     return this.processContractMailOutput(contractMailOutput, receiver);
   }
 
   /**
    *  Fetch all mails.
-   * @param {string} receiver - The mail receiver address.
+   * @param {Address} receiver - The mail receiver address.
    * @returns {Promise<ReceivedEnvelope[]>} Array of received mail Envelopes.
    */
-  public async fetchAll(receiver: string): Promise<ReceivedEnvelope[]> {
-    const contractMailOutputs: ContractMailOutput[] = await this.contract['getMails'](
-      this.appId,
-      receiver,
-    );
+  public async fetchAll(receiver: Address): Promise<ReceivedEnvelope[]> {
+    const contractMailOutputs: ContractMailOutputs = await this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getMails',
+      args: [this.appId, receiver],
+    });
 
     return this.processContractMailOutputs(contractMailOutputs, receiver);
   }
 
   /**
    *  Fetch mails paginated.
-   * @param {string} receiver - The mail receiver address.
-   * @param {BigNumberish} pageNumber - The page number.
-   * @param {BigNumberish} pageSize - The page size.
+   * @param {Address} receiver - The mail receiver address.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
    * @returns {Promise<ReceivedEnvelope[]>} Array of received mail Envelopes.
    */
   public async fetchPaginated(
-    receiver: string,
-    pageNumber: BigNumberish,
-    pageSize: BigNumberish,
+    receiver: Address,
+    pageNumber: bigint,
+    pageSize: bigint,
   ): Promise<ReceivedEnvelope[]> {
-    const contractMailOutputs: ContractMailOutput[] = await this.contract['getMailsPaginated'](
-      this.appId,
-      receiver,
-      pageNumber,
-      pageSize,
-    );
+    const contractMailOutputs: ContractMailOutputs = await this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getMailsPaginated',
+      args: [this.appId, receiver, pageNumber, pageSize],
+    });
 
     return this.processContractMailOutputs(contractMailOutputs, receiver);
   }
@@ -173,20 +170,28 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Counts the number of mails of a receiver.
-   * @param {string} receiver - The mail receiver address.
-   * @returns {Promise<BigNumber>} Number of mails.
+   * @param {Address} receiver - The mail receiver address.
+   * @returns {Promise<BigInt>} Number of mails.
    */
-  public count(receiver: string): Promise<BigNumber> {
-    return this.contract['getMailsCount'](this.appId, receiver);
+  public async count(receiver: Address): Promise<bigint> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getMailsCount',
+      args: [this.appId, receiver],
+    });
   }
 
   /**
    *  Retrieves the user's App ID's.
-   * @param {string} user - The user address.
-   * @returns {Promise<string[]>} Array of App ID's.
+   * @param {Address} user - The user address.
+   * @returns {Promise<AppId[]>} Array of App ID's.
    */
-  public async getUserAppIds(user: string): Promise<string[]> {
-    return this.contract['getUserAppIds'](user);
+  public async getUserAppIds(user: Address): Promise<readonly AppId[]> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getUserAppIds',
+      args: [user],
+    });
   }
 
   /**
@@ -200,84 +205,79 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Listener for new mail event.
-   * @param {string | null } sender - The mail sender address.
-   * @param {string | null } receiver - The mail receiver address.
+   * @param {Address | null } sender - The mail sender address.
+   * @param {Address | null } receiver - The mail receiver address.
    * @param {Function} callback - The callback function.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onNew(
-    sender: string | null,
-    receiver: string | null,
+    sender: Address | null,
+    receiver: Address | null,
     callback: (envelope: ReceivedEnvelope) => void,
-  ): void {
-    const filter = this.contract.filters['MailSent'](null, sender, receiver);
-
-    this.contract.on(
-      filter,
-      async (
-        appId,
-        sender,
-        receiver,
-        envelopeUrl,
-        envelopeChecksum,
-        sentAt,
-        openedAt,
-        metadata,
-        index,
-        isDeleted,
-      ) => {
-        const eventOutput: MailSentEventOutput = {
-          appId,
-          sender,
-          receiver,
-          envelopeUrl,
-          envelopeChecksum,
-          sentAt,
-          openedAt,
-          metadata,
-          index,
-          isDeleted,
-        };
-
-        if (appId === this.appId) {
-          callback(await this.processContractMailOutput(eventOutput, receiver));
-        }
-      },
-    );
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'MailSent',
+      args: { sender, receiver },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          if (args.appId === this.appId) {
+            const eventOutput = args as MailSentEventOutput;
+            callback(await this.processContractMailOutput(eventOutput, eventOutput.receiver));
+          }
+        }),
+    });
   }
 
   /**
    *  Listener for opened mail event.
-   * @param {string | null } receiver - The mail receiver address.
-   * @param {BigNumberish | null } index - The index of the mail.
+   * @param {Address | null } receiver - The mail receiver address.
+   * @param {BigInt | null } index - The index of the mail.
    * @param {Function} callback - The callback function.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onOpened(
-    receiver: string | null,
-    index: BigNumberish | null,
-    callback: (index: number, openedAt: number) => void,
-  ): void {
-    const filter = this.contract.filters['MailOpened'](this.appId, receiver, index);
-
-    this.contract.on(filter, (appId, receiver, index, openedAt) => {
-      callback(index.toNumber(), openedAt.toNumber());
+    receiver: Address | null,
+    index: bigint | null,
+    callback: (index: bigint, openedAt: bigint) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'MailOpened',
+      args: { appId: this.appId, receiver, index },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          if (args.appId) {
+            const eventOutput = args as MailOpenedEventOutput;
+            callback(eventOutput.index, eventOutput.openedAt);
+          }
+        }),
     });
   }
 
   /**
    *  Listener for deleted mail event.
-   * @param {string | null } receiver - The mail receiver address.
-   * @param {BigNumberish | null } index - The index of the mail.
+   * @param {Address | null } receiver - The mail receiver address.
+   * @param {BigInt | null } index - The index of the mail.
    * @param {Function} callback - The callback function.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onDeleted(
-    receiver: string | null,
-    index: BigNumberish | null,
-    callback: (index: number, deletedAt: number) => void,
-  ): void {
-    const filter = this.contract.filters['MailDeleted'](this.appId, receiver, index);
-
-    this.contract.on(filter, (appId, receiver, index, deletedAt) => {
-      callback(index.toNumber(), deletedAt.toNumber());
+    receiver: Address | null,
+    index: bigint | null,
+    callback: (index: bigint, deletedAt: bigint) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'MailDeleted',
+      args: { appId: this.appId, receiver, index },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          if (args.appId) {
+            const eventOutput = args as MailDeletedEventOutput;
+            callback(eventOutput.index, eventOutput.deletedAt);
+          }
+        }),
     });
   }
 }

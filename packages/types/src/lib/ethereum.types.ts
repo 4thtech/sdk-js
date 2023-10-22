@@ -1,48 +1,37 @@
-import { TransactionRequest, TransactionResponse } from '@ethersproject/abstract-provider';
-import { NetworkType } from './network.types';
-import { DeepRequired } from 'ts-essentials';
+import type { Abi, Chain as ViemChain, Hash, Hex } from 'viem';
 
 export type Address = `0x${string}`;
 
-export type ContractParams = {
+export type AppId = `0x${string}`;
+
+export type TransactionHash = Hash;
+
+export type ContractAbi = Abi | readonly unknown[];
+
+export type ContractConfig<TAbi extends ContractAbi> = {
   address: Address;
-  abi?: string;
+  abi: TAbi;
 };
 
-export type RequiredContractParams = DeepRequired<ContractParams>;
-
-export type Chain = {
-  id: number;
-  name: string;
-  network: string;
-  type: NetworkType;
-  networkEndpoint: string;
-  contracts: {
-    appFeeManager?: ContractParams;
-    chat?: ContractParams;
-    mail?: ContractParams;
-    user?: ContractParams;
-  };
+export type ChainContract = {
+  address: Address;
 };
 
-export type ChatReadyChain = Chain & {
-  contracts: {
-    chat: ContractParams;
-  };
+export type ChainContracts = {
+  appFeeManager?: ChainContract;
+  mail?: ChainContract;
+  chat?: ChainContract;
+  user?: ChainContract;
 };
 
-export type MailReadyChain = Chain & {
-  contracts: {
-    mail: ContractParams;
-  };
+export type Chain = ViemChain & {
+  contracts: Partial<ChainContracts>;
 };
 
-export type UserReadyChain = Chain & {
-  contracts: {
-    user: ContractParams;
-  };
+export type EthereumTransactionRequest = {
+  to: Address;
+  data: Hex;
+  value?: bigint;
 };
 
-export type EthereumTransactionRequest = TransactionRequest;
-
-export type EthereumTransactionResponse = TransactionResponse;
+export type EthereumTransactionResponse = TransactionHash;

@@ -14,9 +14,7 @@ describe('EncryptionHandler', () => {
     await aesEncryption.generateSecretKey();
 
     const encryptionHandlerConfig = {
-      customEncryptionImplementations: new Map([
-        [aesEncryption.getType() as EncryptionType, aesEncryption],
-      ]),
+      encryptionImplementations: [aesEncryption],
     };
 
     encryptionHandler = new EncryptionHandler(encryptionHandlerConfig);

@@ -1,33 +1,37 @@
 import {
-  ChatReadyChain,
+  Address,
+  AppId,
   ContractConversationOutput,
-  ContractMessageOutput,
+  ContractConversationOutputs,
+  ContractMessageOutputs,
   Conversation,
+  ConversationHash,
+  ConversationRemovedEventOutput,
   EthereumTransactionResponse,
+  GroupConversationCreatedEventOutput,
+  MemberAddedToConversationEventOutput,
+  MemberRemovedFromConversationEventOutput,
   Message,
+  MessageDeletedEventOutput,
   MessageMetaData,
   MessageSentEventOutput,
   ReceivedMessage,
-  Signer,
+  WalletClient,
 } from '@4thtech-sdk/types';
 import { ChatContract } from './contract/chat-contract';
-import { BigNumber, BigNumberish } from 'ethers';
-import { arrayify, getAddress, keccak256 } from 'ethers/lib/utils';
 import { Encryptor } from './encryptor';
+import { getAddress, keccak256, toBytes, WatchContractEventReturnType } from 'viem';
 
 /**
  * Configuration for the Chat class.
  *
- * @typedef {Object} ChatConfig
- * @property {Signer} signer The signer instance.
- * @property {ChatReadyChain} chain A chat-ready blockchain instance.
+ * @property {WalletClient} walletClient The WalletClient instance.
  * @property {string} appId The application’s identifier.
  * @property {Encryptor} encryptor Optional Encryptor service which is used for message encryption/decryption.
  */
 export type ChatConfig = {
-  signer: Signer;
-  chain: ChatReadyChain;
-  appId?: string;
+  walletClient: WalletClient;
+  appId?: AppId;
   encryptor?: Encryptor;
 };
 
@@ -49,7 +53,7 @@ export class Chat extends ChatContract {
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async sendMessage(
-    receiver: string,
+    receiver: Address,
     message: Message,
     encryptMessage = true,
   ): Promise<EthereumTransactionResponse> {
@@ -64,16 +68,11 @@ export class Chat extends ChatContract {
       metaData = encryptedMessage.metadata;
     }
 
-    const populatedTx = await this.contract.populateTransaction['sendMessage'](
-      this.appId,
-      receiver,
-      content,
-      this.encodeMetaData<MessageMetaData>(metaData),
-    );
-
-    await this.appendAppRequiredFee(populatedTx);
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'sendMessage',
+      args: [this.appId, receiver, content, this.encodeMetaData<MessageMetaData>(metaData)],
+      fee: await this.getAppRequiredFee(),
+    });
   }
 
   /**
@@ -85,7 +84,7 @@ export class Chat extends ChatContract {
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async addMessageToConversation(
-    conversationHash: string,
+    conversationHash: ConversationHash,
     message: Message,
     encryptMessage = true,
   ): Promise<EthereumTransactionResponse> {
@@ -101,35 +100,28 @@ export class Chat extends ChatContract {
       metaData = encryptedMessage.metadata;
     }
 
-    const populatedTx = await this.contract.populateTransaction['addMessageToConversation'](
-      this.appId,
-      conversationHash,
-      content,
-      this.encodeMetaData<MessageMetaData>(metaData),
-    );
-
-    await this.appendAppRequiredFee(populatedTx);
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'addMessageToConversation',
+      args: [this.appId, conversationHash, content, this.encodeMetaData<MessageMetaData>(metaData)],
+      fee: await this.getAppRequiredFee(),
+    });
   }
 
   /**
    * Deletes a message from a conversation.
    *
-   * @param {string} conversationHash The target conversation's hash.
-   * @param {BigNumberish} index The index of the message to be deleted in the conversation.
+   * @param {ConversationHash} conversationHash The target conversation's hash.
+   * @param {BigInt} index The index of the message to be deleted in the conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async deleteMessage(
-    conversationHash: string,
-    index: BigNumberish,
+    conversationHash: ConversationHash,
+    index: bigint,
   ): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction['deleteMessage'](
-      conversationHash,
-      index,
-    );
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'deleteMessage',
+      args: [conversationHash, index],
+    });
   }
 
   /**
@@ -138,14 +130,14 @@ export class Chat extends ChatContract {
    * @param {string} conversationName The name of the new group conversation.
    * @param {boolean} isOnlyCreatorAllowedToAddMembers Specifies whether only the creator can add members to the group conversation.
    * @param {boolean} isEncrypted Specifies whether the group conversation should be encrypted.
-   * @param {string[]} members The initial members of the group conversation.
+   * @param {Address[]} members The initial members of the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async createGroupConversation(
     conversationName: string,
     isOnlyCreatorAllowedToAddMembers: boolean,
     isEncrypted: boolean,
-    members: string[],
+    members: Address[],
   ): Promise<EthereumTransactionResponse> {
     let creatorEncryptedSecretKey = '';
     let membersEncryptedSecretKeys: string[] = [];
@@ -158,143 +150,149 @@ export class Chat extends ChatContract {
       membersEncryptedSecretKeys = await this.encryptSecretKeyForMembers(secretKey, members);
     }
 
-    const populatedTx = await this.contract.populateTransaction['createGroupConversation'](
-      this.appId,
-      conversationName,
-      isOnlyCreatorAllowedToAddMembers,
-      isEncrypted,
-      members,
-      membersEncryptedSecretKeys,
-      creatorEncryptedSecretKey,
-    );
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'createGroupConversation',
+      args: [
+        this.appId,
+        conversationName,
+        isOnlyCreatorAllowedToAddMembers,
+        isEncrypted,
+        members,
+        membersEncryptedSecretKeys,
+        creatorEncryptedSecretKey,
+      ],
+    });
   }
 
   /**
    * Removes a conversation.
    *
-   * @param {string} conversationHash The target conversation's hash.
+   * @param {ConversationHash} conversationHash The target conversation's hash.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
-  public async removeConversation(conversationHash: string): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction['removeConversation'](
-      this.appId,
-      conversationHash,
-    );
-
-    return this.sendTransaction(populatedTx);
+  public async removeConversation(
+    conversationHash: ConversationHash,
+  ): Promise<EthereumTransactionResponse> {
+    return this.sendContractTransaction({
+      functionName: 'removeConversation',
+      args: [this.appId, conversationHash],
+    });
   }
 
   /**
    * Adds members to a group conversation.
    *
-   * @param {string} conversationHash The target group conversation's hash.
-   * @param {string[]} members The members to be added to the group conversation.
+   * @param {ConversationHash} conversationHash The target group conversation's hash.
+   * @param {Address[]} members The members to be added to the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async addMembersToGroupConversation(
-    conversationHash: string,
-    members: string[],
+    conversationHash: ConversationHash,
+    members: Address[],
   ): Promise<EthereumTransactionResponse> {
     // TODO: retrieve conversation secret key and encrypt it for each member
     const membersEncryptedSecretKeys: string[] = [];
 
-    const populatedTx = await this.contract.populateTransaction['addMembersToGroupConversation'](
-      this.appId,
-      conversationHash,
-      members,
-      membersEncryptedSecretKeys,
-    );
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'addMembersToGroupConversation',
+      args: [this.appId, conversationHash, members, membersEncryptedSecretKeys],
+    });
   }
 
   /**
    * Removes a member from a group conversation.
    *
-   * @param {string} conversationHash The target group conversation's hash.
-   * @param {string} member The member to be removed from the group conversation.
+   * @param {ConversationHash} conversationHash The target group conversation's hash.
+   * @param {Address} member The member to be removed from the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async removeMemberFromGroupConversation(
-    conversationHash: string,
-    member: string,
+    conversationHash: ConversationHash,
+    member: Address,
   ): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction[
-      'removeMemberFromGroupConversation'
-    ](this.appId, conversationHash, member);
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'removeMemberFromGroupConversation',
+      args: [this.appId, conversationHash, member],
+    });
   }
 
   /**
    * Removes members from a group conversation.
    *
-   * @param {string} conversationHash The target group conversation's hash.
-   * @param {string[]} members The members to be removed from the group conversation.
+   * @param {ConversationHash} conversationHash The target group conversation's hash.
+   * @param {Address[]} members The members to be removed from the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async removeMembersFromGroupConversation(
-    conversationHash: string,
-    members: string[],
+    conversationHash: ConversationHash,
+    members: Address[],
   ): Promise<EthereumTransactionResponse> {
-    const populatedTx = await this.contract.populateTransaction[
-      'removeMembersFromGroupConversation'
-    ](this.appId, conversationHash, members);
-
-    return this.sendTransaction(populatedTx);
+    return this.sendContractTransaction({
+      functionName: 'removeMembersFromGroupConversation',
+      args: [this.appId, conversationHash, members],
+    });
   }
 
   /**
    * Calculates a conversation hash given two account addresses.
    *
-   * @param {string} account1 The first account address.
-   * @param {string} account2 The second account address.
-   * @returns {string} The calculated conversation hash.
+   * @param {Address} account1 The first account address.
+   * @param {Address} account2 The second account address.
+   * @returns {ConversationHash} The calculated conversation hash.
    */
-  public calculateConversationHash(account1: string, account2: string): string {
+  public calculateConversationHash(account1: Address, account2: Address): ConversationHash {
     // Ensure the addresses are in a consistent format
     account1 = getAddress(account1);
     account2 = getAddress(account2);
 
     if (account1 < account2) {
-      return keccak256(new Uint8Array([...arrayify(account1), ...arrayify(account2)]));
+      return keccak256(new Uint8Array([...toBytes(account1), ...toBytes(account2)]));
     }
 
-    return keccak256(new Uint8Array([...arrayify(account2), ...arrayify(account1)]));
+    return keccak256(new Uint8Array([...toBytes(account2), ...toBytes(account1)]));
   }
 
   /**
    * Counts the number of messages in a conversation.
    *
-   * @param {string} conversationHash The target conversation's hash.
-   * @returns {Promise<BigNumber>} A promise that resolves to the number of messages in the conversation.
+   * @param {ConversationHash} conversationHash The target conversation's hash.
+   * @returns {Promise<BigInt>} A promise that resolves to the number of messages in the conversation.
    */
-  public async countMessages(conversationHash: string): Promise<BigNumber> {
-    return this.contract['getMessagesCount'](conversationHash);
+  public async countMessages(conversationHash: ConversationHash): Promise<bigint> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getMessagesCount',
+      args: [conversationHash],
+    });
   }
 
   /**
    * Fetches the conversation hashes related to an account.
    *
-   * @param {string} account The target account.
-   * @returns {Promise<string[]>} A promise that resolves to an array of conversation hashes related to the account.
+   * @param {Address} account The target account.
+   * @returns {Promise<ConversationHash[]>} A promise that resolves to an array of conversation hashes related to the account.
    */
-  public async fetchConversationHashes(account: string): Promise<string[]> {
-    return this.contract['getConversationHashes'](this.appId, account);
+  public async fetchConversationHashes(account: Address): Promise<readonly ConversationHash[]> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getConversationHashes',
+      args: [this.appId, account],
+    });
   }
 
   /**
    * Fetches a conversation given its hash.
    *
-   * @param {string} conversationHash The target conversation's hash.
+   * @param {ConversationHash} conversationHash The target conversation's hash.
    * @returns {Promise<Conversation>} A promise that resolves to the fetched conversation.
    */
-  public async fetchConversation(conversationHash: string): Promise<Conversation> {
-    const contactConversationOutput: ContractConversationOutput = await this.contract[
-      'getConversation'
-    ](conversationHash);
+  public async fetchConversation(conversationHash: ConversationHash): Promise<Conversation> {
+    const contactConversationOutput: ContractConversationOutput =
+      await this.publicClient.readContract({
+        ...this.contractConfig,
+        functionName: 'getConversation',
+        args: [conversationHash],
+      });
 
     return this.processContractConversationOutput(contactConversationOutput);
   }
@@ -302,13 +300,16 @@ export class Chat extends ChatContract {
   /**
    * Fetches all the conversations related to an account.
    *
-   * @param {string} account The target account.
+   * @param {Address} account The target account.
    * @returns {Promise<Conversation[]>} A promise that resolves to an array of conversations related to the account.
    */
-  public async fetchConversations(account: string): Promise<Conversation[]> {
-    const contactConversationOutputs: ContractConversationOutput[] = await this.contract[
-      'getConversations'
-    ](this.appId, account);
+  public async fetchConversations(account: Address): Promise<Conversation[]> {
+    const contactConversationOutputs: ContractConversationOutputs =
+      await this.publicClient.readContract({
+        ...this.contractConfig,
+        functionName: 'getConversations',
+        args: [this.appId, account],
+      });
 
     return this.processContractConversationOutputs(contactConversationOutputs);
   }
@@ -316,19 +317,21 @@ export class Chat extends ChatContract {
   /**
    * Fetches the messages of a conversation in a paginated manner.
    *
-   * @param {string} conversationHash The target conversation's hash.
-   * @param {BigNumberish} pageNumber The page number.
-   * @param {BigNumberish} pageSize The page size.
+   * @param {ConversationHash} conversationHash The target conversation's hash.
+   * @param {BigInt} pageNumber The page number.
+   * @param {BigInt} pageSize The page size.
    * @returns {Promise<ReceivedMessage[]>} A promise that resolves to an array of messages of the conversation.
    */
   public async fetchConversationMessagesPaginated(
-    conversationHash: string,
-    pageNumber: BigNumberish,
-    pageSize: BigNumberish,
+    conversationHash: ConversationHash,
+    pageNumber: bigint,
+    pageSize: bigint,
   ): Promise<ReceivedMessage[]> {
-    const contractMessageOutputs: ContractMessageOutput[] = await this.contract[
-      'getConversationMessagesPaginated'
-    ](conversationHash, pageNumber, pageSize);
+    const contractMessageOutputs: ContractMessageOutputs = await this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getConversationMessagesPaginated',
+      args: [conversationHash, pageNumber, pageSize],
+    });
 
     return this.processContractMessageOutputs(contractMessageOutputs, conversationHash);
   }
@@ -336,159 +339,183 @@ export class Chat extends ChatContract {
   /**
    * Fetches the app IDs a user is related to.
    *
-   * @param {string} user The target user address.
-   * @returns {Promise<string[]>} A promise that resolves to an array of app IDs the user is related to.
+   * @param {Address} user The target user address.
+   * @returns {Promise<AppId[]>} A promise that resolves to an array of app IDs the user is related to.
    */
-  public async getUserAppIds(user: string): Promise<string[]> {
-    return this.contract['getUserAppIds'](user);
+  public async getUserAppIds(user: Address): Promise<readonly AppId[]> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getUserAppIds',
+      args: [user],
+    });
   }
 
   /**
    * Listener for when a message is sent.
    *
-   * @param {string | null} sender The sender of the message.
-   * @param {string | null} conversationHash The hash of the conversation where the message belongs to.
-   * @param {BigNumberish | null} index The index of the message in the conversation.
+   * @param {Address | null} sender The sender of the message.
+   * @param {ConversationHash | null} conversationHash The hash of the conversation where the message belongs to.
+   * @param {BigInt | null} index The index of the message in the conversation.
    * @param {Function} callback The callback function that is invoked when a message is sent.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMessageSent(
-    sender: string | null,
-    conversationHash: string | null,
-    index: BigNumberish | null,
-    callback: (conversationHash: string, receivedMessage: ReceivedMessage) => void,
-  ): void {
-    const filter = this.contract.filters['MessageSent'](sender, conversationHash, index);
-
-    this.contract.on(
-      filter,
-      async (sender, conversationHash, content, sentAt, metadata, index, isDeleted) => {
-        const eventOutput: MessageSentEventOutput = {
-          sender,
-          conversationHash,
-          content,
-          sentAt,
-          metadata,
-          index,
-          isDeleted,
-        };
-
-        callback(
-          conversationHash,
-          await this.processContractMessageOutput(eventOutput, conversationHash),
-        );
-      },
-    );
+    sender: Address | null,
+    conversationHash: ConversationHash | null,
+    index: bigint | null,
+    callback: (conversationHash: ConversationHash, receivedMessage: ReceivedMessage) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'MessageSent',
+      args: { sender, conversationHash, index },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          const eventOutput = args as MessageSentEventOutput;
+          callback(
+            eventOutput.conversationHash,
+            await this.processContractMessageOutput(eventOutput, eventOutput.conversationHash),
+          );
+        }),
+    });
   }
 
   /**
    * Listener for when a message is deleted.
    *
-   * @param {string | null} conversationHash The hash of the conversation where the message belongs to.
-   * @param {string | null} sender The sender of the message.
-   * @param {BigNumberish | null} index The index of the message in the conversation.
+   * @param {ConversationHash | null} conversationHash The hash of the conversation where the message belongs to.
+   * @param {Address | null} sender The sender of the message.
+   * @param {BigInt | null} index The index of the message in the conversation.
    * @param {Function} callback The callback function that is invoked when a message is deleted.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMessageDeleted(
-    conversationHash: string | null,
-    sender: string | null,
-    index: BigNumberish | null,
-    callback: (conversationHash: string, sender: string, index: number) => void,
-  ): void {
-    const filter = this.contract.filters['MessageDeleted'](conversationHash, sender, index);
-
-    this.contract.on(filter, (conversationHash, sender, index) => {
-      callback(conversationHash, sender, index.toNumber());
+    conversationHash: ConversationHash | null,
+    sender: Address | null,
+    index: bigint | null,
+    callback: (conversationHash: ConversationHash, sender: Address, index: bigint) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'MessageDeleted',
+      args: { conversationHash, sender, index },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          const eventOutput = args as MessageDeletedEventOutput;
+          callback(eventOutput.conversationHash, eventOutput.sender, eventOutput.index);
+        }),
     });
   }
 
   /**
    * Listener for when a group conversation is created.
    *
-   * @param {string | null} sender The sender of the group creation (group creator).
+   * @param {Address | null} sender The sender of the group creation (group creator).
    * @param {Function} callback The callback function that is invoked when a group conversation is created.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onGroupConversationCreated(
-    sender: string | null,
+    sender: Address | null,
     callback: (
-      sender: string,
-      conversationHash: string,
+      sender: Address,
+      conversationHash: ConversationHash,
       conversationName: string,
-      members: string[],
+      members: Address[],
     ) => void,
-  ): void {
-    const filter = this.contract.filters['GroupConversationCreated'](sender);
-
-    this.contract.on(filter, (sender, conversationHash, conversationName, members) => {
-      callback(sender, conversationHash, conversationName, members);
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'GroupConversationCreated',
+      args: { sender },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          const eventOutput = args as GroupConversationCreatedEventOutput;
+          callback(
+            eventOutput.sender,
+            eventOutput.conversationHash,
+            eventOutput.conversationName,
+            eventOutput.members,
+          );
+        }),
     });
   }
 
   /**
    * Listener for when a conversation is removed.
    *
-   * @param {string | null} sender The sender of the conversation deletion (conversation creator).
-   * @param {string | null} conversationHash The hash of the conversation being removed.
+   * @param {Address | null} sender The sender of the conversation deletion (conversation creator).
+   * @param {ConversationHash | null} conversationHash The hash of the conversation being removed.
    * @param {Function} callback The callback function that is invoked when a conversation is removed.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onConversationRemoved(
-    sender: string | null,
-    conversationHash: string | null,
-    callback: (sender: string, conversationHash: string) => void,
-  ): void {
-    const filter = this.contract.filters['ConversationRemoved'](sender, conversationHash);
-
-    this.contract.on(filter, (sender, conversationHash) => {
-      callback(sender, conversationHash);
+    sender: Address | null,
+    conversationHash: ConversationHash | null,
+    callback: (sender: Address, conversationHash: ConversationHash) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'ConversationRemoved',
+      args: { sender, conversationHash },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          const eventOutput = args as ConversationRemovedEventOutput;
+          callback(eventOutput.sender, eventOutput.conversationHash);
+        }),
     });
   }
 
   /**
    * Listener for when a member is added to a group conversation.
    *
-   * @param {string | null} appId The app ID of the chat.
-   * @param {string | null} conversationHash The hash of the conversation to which a member is being added.
-   * @param {string | null} member The member being added to the group conversation.
+   * @param {AppId | null} appId The app ID of the chat.
+   * @param {ConversationHash | null} conversationHash The hash of the conversation to which a member is being added.
+   * @param {Address | null} member The member being added to the group conversation.
    * @param {Function} callback The callback function that is invoked when a member is added to a group conversation.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMemberAddedToConversation(
-    appId: string | null,
-    conversationHash: string | null,
-    member: string | null,
-    callback: (appId: string, conversationHash: string, member: string) => void,
-  ): void {
-    const filter = this.contract.filters['MemberAddedToConversation'](
-      appId,
-      conversationHash,
-      member,
-    );
-
-    this.contract.on(filter, (appId, conversationHash, member) => {
-      callback(appId, conversationHash, member);
+    appId: AppId | null,
+    conversationHash: ConversationHash | null,
+    member: Address | null,
+    callback: (appId: AppId, conversationHash: ConversationHash, member: Address) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'MemberAddedToConversation',
+      args: { appId, conversationHash, member },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          const eventOutput = args as MemberAddedToConversationEventOutput;
+          callback(eventOutput.appId, eventOutput.conversationHash, eventOutput.member);
+        }),
     });
   }
 
   /**
    * Listener for when a member is removed from a group conversation.
    *
-   * @param {string | null} appId The app ID of the chat.
-   * @param {string | null} conversationHash The hash of the conversation from which a member is being removed.
-   * @param {string | null} member The member being removed from the group conversation.
+   * @param {AppId | null} appId The app ID of the chat.
+   * @param {ConversationHash | null} conversationHash The hash of the conversation from which a member is being removed.
+   * @param {Address | null} member The member being removed from the group conversation.
    * @param {Function} callback The callback function that is invoked when a member is removed from a group conversation.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMemberRemovedFromConversation(
-    appId: string | null,
-    conversationHash: string | null,
-    member: string | null,
-    callback: (appId: string, conversationHash: string, member: string) => void,
-  ): void {
-    const filter = this.contract.filters['MemberRemovedFromConversation'](
-      appId,
-      conversationHash,
-      member,
-    );
-
-    this.contract.on(filter, (appId, conversationHash, member) => {
-      callback(appId, conversationHash, member);
+    appId: AppId | null,
+    conversationHash: ConversationHash | null,
+    member: Address | null,
+    callback: (appId: AppId, conversationHash: ConversationHash, member: Address) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'MemberRemovedFromConversation',
+      args: { appId, conversationHash, member },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          const eventOutput = args as MemberRemovedFromConversationEventOutput;
+          callback(eventOutput.appId, eventOutput.conversationHash, eventOutput.member);
+        }),
     });
   }
 }

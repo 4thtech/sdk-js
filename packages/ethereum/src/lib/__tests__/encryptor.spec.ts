@@ -1,20 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { UserReadyChain } from '@4thtech-sdk/types';
-import { TestEncryptorExtension, TestSigner } from './utils.spec';
-import { localhost } from '../chains';
+import { TestEncryptorExtension, TestWalletClient } from './utils.spec';
 import { Encryptor } from '../encryptor';
 
 // Initialize signer
-const signer = new TestSigner();
-
-// Define chain
-const testChain = localhost;
+const signer = new TestWalletClient();
 
 const encryptor = new Encryptor({
-  encryptorExtension: new TestEncryptorExtension(signer),
+  encryptorExtension: new TestEncryptorExtension(),
   userConfig: {
-    signer,
-    chain: testChain as UserReadyChain,
+    walletClient: signer,
   },
 });
 

@@ -1,13 +1,17 @@
-import { Chain, NetworkType } from '@4thtech-sdk/types';
+import { defineChain } from 'viem';
+import {
+  edgewareTestnet as viemEdgewareTestnet,
+  hardhat as viemHardhat,
+  metisGoerli as viemMetisGoerli,
+  polygonMumbai as viemPolygonMumbai,
+  sepolia as viemSepolia,
+} from 'viem/chains';
+import { Chain } from '@4thtech-sdk/types';
 
 // You can find a chain list at https://chainlist.org
 
-export const localhost: Chain = {
-  id: 31337,
-  name: 'HardHat',
-  network: 'hardhat',
-  type: NetworkType.LOCAL_NET,
-  networkEndpoint: 'http://127.0.0.1:8545/',
+export const hardhat: Chain = {
+  ...viemHardhat,
   contracts: {
     appFeeManager: {
       address: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
@@ -16,7 +20,7 @@ export const localhost: Chain = {
       address: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
     },
     chat: {
-      address: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+      address: '0x610178dA211FEF7D417bC0e6FeD39F05609AD788',
     },
     user: {
       address: '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
@@ -25,12 +29,9 @@ export const localhost: Chain = {
 };
 
 export const sepolia: Chain = {
-  id: 11155111,
-  name: 'Sepolia',
-  network: 'sepolia',
-  type: NetworkType.TEST_NET,
-  networkEndpoint: 'https://rpc.sepolia.org',
+  ...viemSepolia,
   contracts: {
+    ...viemSepolia.contracts,
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
@@ -47,12 +48,9 @@ export const sepolia: Chain = {
 };
 
 export const polygonMumbai: Chain = {
-  id: 80001,
-  name: 'Polygon Mumbai',
-  network: 'maticmum',
-  type: NetworkType.TEST_NET,
-  networkEndpoint: 'https://polygon-mumbai-bor.publicnode.com',
+  ...viemPolygonMumbai,
   contracts: {
+    ...viemPolygonMumbai.contracts,
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
@@ -69,11 +67,7 @@ export const polygonMumbai: Chain = {
 };
 
 export const edgewareTestnet: Chain = {
-  id: 2022,
-  name: 'Beresheet BereEVM Testnet',
-  network: 'edgewareTestnet',
-  type: NetworkType.TEST_NET,
-  networkEndpoint: 'https://beresheet-evm.jelliedowl.net',
+  ...viemEdgewareTestnet,
   contracts: {
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
@@ -90,12 +84,25 @@ export const edgewareTestnet: Chain = {
   },
 };
 
-export const artheraTestnet: Chain = {
+export const artheraTestnet: Chain = defineChain({
   id: 10243,
   name: 'Arthera Testnet',
-  network: 'artheraTestnet',
-  type: NetworkType.TEST_NET,
-  networkEndpoint: 'https://rpc-test.arthera.net',
+  network: 'arthera-testnet',
+  nativeCurrency: { name: 'Arthera', symbol: 'AA', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc-test.arthera.net'],
+    },
+    public: {
+      http: ['https://rpc-test.arthera.net'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Arthera Explorer',
+      url: 'https://explorer-test.arthera.net',
+    },
+  },
   contracts: {
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
@@ -110,15 +117,13 @@ export const artheraTestnet: Chain = {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
-};
+  testnet: true,
+});
 
 export const metisGoerli: Chain = {
-  id: 599,
-  name: 'Metis Goerli',
-  network: 'metis-goerli',
-  type: NetworkType.TEST_NET,
-  networkEndpoint: 'https://goerli.gateway.metisdevops.link',
+  ...viemMetisGoerli,
   contracts: {
+    ...viemMetisGoerli.contracts,
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
@@ -134,12 +139,19 @@ export const metisGoerli: Chain = {
   },
 };
 
-export const immu3Testnet: Chain = {
+export const immu3Testnet: Chain = defineChain({
   id: 3100,
   name: 'Immu3 EVM Testnet',
-  network: 'immu3Testnet',
-  type: NetworkType.TEST_NET,
-  networkEndpoint: 'https://fraa-dancebox-3043-rpc.a.dancebox.tanssi.network',
+  network: 'immu-testnet',
+  nativeCurrency: { name: 'IMMU', symbol: 'IMMU', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ['https://fraa-dancebox-3043-rpc.a.dancebox.tanssi.network'],
+    },
+    public: {
+      http: ['https://fraa-dancebox-3043-rpc.a.dancebox.tanssi.network'],
+    },
+  },
   contracts: {
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
@@ -154,4 +166,5 @@ export const immu3Testnet: Chain = {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
-};
+  testnet: true,
+});

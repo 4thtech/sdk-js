@@ -1,5 +1,7 @@
-import { BigNumber } from 'ethers';
 import { EncryptionMetaData } from './encryption.types';
+import { Address, AppId } from './ethereum.types';
+
+export type ConversationHash = `0x${string}`;
 
 export type MessageMetaData = {
   encryption?: EncryptionMetaData;
@@ -25,61 +27,87 @@ export type EncryptedSecretKeyData = {
 };
 
 export type ReceivedMessage = {
-  sender: string;
+  sender: Address;
   content: string;
-  sentAt: number;
-  index: number;
+  sentAt: bigint;
+  index: bigint;
   isDeleted: boolean;
 };
 
 export type Conversation = {
-  hash: string;
+  hash: ConversationHash;
   isGroup: boolean;
   name: string;
-  creator: string;
+  creator: Address;
   isOnlyCreatorAllowedToAddMembers: boolean;
   isEncrypted: boolean;
-  members: string[];
+  members: readonly Address[];
 };
 
-export type ContractMessageOutput = [string, string, BigNumber, string, BigNumber, boolean] & {
-  sender: string;
+export type ContractMessageOutput = {
+  sender: Address;
   content: string;
-  sentAt: BigNumber;
+  sentAt: bigint;
   metadata: string;
-  index: BigNumber;
+  index: bigint;
   isDeleted: boolean;
 };
 
-export type ContractConversationOutput = [
-  string,
-  boolean,
-  string,
-  string,
-  boolean,
-  boolean,
-  string[],
-] & {
-  hash: string;
+export type ContractMessageOutputs = ReadonlyArray<ContractMessageOutput>;
+
+export type ContractConversationOutput = {
+  hash: ConversationHash;
   isGroup: boolean;
   name: string;
-  creator: string;
+  creator: Address;
   isOnlyCreatorAllowedToAddMembers: boolean;
   isEncrypted: boolean;
-  members: string[];
+  members: readonly Address[];
 };
 
-export type ContractEncryptedSecretKeyDataOutput = [string, string] & {
-  userWhoEncrypted: string;
+export type ContractConversationOutputs = ReadonlyArray<ContractConversationOutput>;
+
+export type ContractEncryptedSecretKeyDataOutput = {
+  userWhoEncrypted: Address;
   encryptedSecretKey: string;
 };
 
 export type MessageSentEventOutput = {
-  sender: string;
-  conversationHash: string;
+  sender: Address;
+  conversationHash: ConversationHash;
   content: string;
-  sentAt: BigNumber;
+  sentAt: bigint;
   metadata: string;
-  index: BigNumber;
+  index: bigint;
   isDeleted: boolean;
+};
+
+export type MessageDeletedEventOutput = {
+  conversationHash: ConversationHash;
+  sender: Address;
+  index: bigint;
+};
+
+export type GroupConversationCreatedEventOutput = {
+  sender: Address;
+  conversationHash: ConversationHash;
+  conversationName: string;
+  members: Address[];
+};
+
+export type ConversationRemovedEventOutput = {
+  sender: Address;
+  conversationHash: ConversationHash;
+};
+
+export type MemberAddedToConversationEventOutput = {
+  appId: AppId;
+  conversationHash: ConversationHash;
+  member: Address;
+};
+
+export type MemberRemovedFromConversationEventOutput = {
+  appId: AppId;
+  conversationHash: ConversationHash;
+  member: Address;
 };

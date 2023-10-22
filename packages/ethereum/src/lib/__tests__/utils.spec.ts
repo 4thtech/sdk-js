@@ -1,48 +1,59 @@
 import {
+  Address,
   Chain,
   EncryptorExtension,
   EncryptorState,
   EthereumTransactionRequest,
+  EthereumTransactionResponse,
   FileInput,
-  Signer,
-  UserReadyChain,
+  WalletClient,
 } from '@4thtech-sdk/types';
-import { ethers } from 'ethers';
+import { ethers, SigningKey } from 'ethers';
 import { RemoteStorageProvider } from '@4thtech-sdk/storage';
 import * as fs from 'fs';
-import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import path from 'path';
 import { Readable } from 'stream';
-import { Encryptor } from '@4thtech-sdk/ethereum';
+import { Encryptor } from '../encryptor';
+import { hardhat } from '../chains';
 
-// Private keys from local Hardhat node
-const testPrivateKeys = [
-  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-  '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-  '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a',
-  '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6',
-  '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a',
-];
+export class TestEthersWalletClient implements WalletClient {
+  public readonly chain: Chain = hardhat;
 
-export class TestSigner implements Signer {
-  private readonly wallet;
+  private readonly address;
+  private readonly provider;
 
-  constructor(id?: number) {
-    const privateKey = testPrivateKeys[id ?? 0];
-    this.wallet = new ethers.Wallet(privateKey);
+  constructor(address?: number | string) {
+    this.address = address;
+
+    // When using HardHat you get access to accounts trough JsonRpcProvider-getSigner
+    const rpcUrl = hardhat.rpcUrls.default.http[0];
+    this.provider = new ethers.JsonRpcProvider(rpcUrl);
   }
 
-  public signTransaction(tx: EthereumTransactionRequest): Promise<string> {
-    return this.wallet.signTransaction(tx);
+  public async getAddress(): Promise<Address> {
+    return (await this.getSigner()).getAddress() as unknown as Address;
   }
 
-  public getAddress(): Promise<string> {
-    return this.wallet.getAddress();
+  public async sendTransaction(
+    transactionRequest: EthereumTransactionRequest,
+  ): Promise<EthereumTransactionResponse> {
+    const signer = await this.getSigner();
+
+    const populatedTx = await signer.populateTransaction(transactionRequest);
+    const txResponse = await signer.sendTransaction(populatedTx);
+
+    return txResponse.hash as unknown as EthereumTransactionResponse;
   }
 
-  public getWallet(): ethers.Wallet {
-    return this.wallet;
+  private async getSigner() {
+    return this.provider.getSigner(this.address);
+  }
+}
+
+export class TestWalletClient extends TestEthersWalletClient {
+  constructor(address?: number | string) {
+    super(address);
   }
 }
 
@@ -73,7 +84,7 @@ export class TestRemoteStorageProvider extends RemoteStorageProvider {
     const filePath = path.resolve(this.getTargetDir(), randomFileName);
 
     if (file instanceof Readable) {
-      await pipeline(file, createWriteStream(filePath));
+      await pipeline(file, fs.createWriteStream(filePath));
     } else {
       await fs.promises.writeFile(filePath, file);
     }
@@ -94,10 +105,19 @@ export class TestRemoteStorageProvider extends RemoteStorageProvider {
 }
 
 export class TestEncryptorExtension implements EncryptorExtension {
-  private readonly wallet: ethers.Wallet;
+  private readonly signingKey;
 
-  constructor(signer: TestSigner) {
-    this.wallet = signer.getWallet();
+  constructor(privateKeyId?: number) {
+    // Private keys from local Hardhat node
+    const testPrivateKeys = [
+      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+      '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+      '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a',
+      '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6',
+      '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a',
+    ];
+
+    this.signingKey = new SigningKey(testPrivateKeys[privateKeyId ?? 0]);
   }
 
   public getState(): EncryptorState {
@@ -105,7 +125,7 @@ export class TestEncryptorExtension implements EncryptorExtension {
   }
 
   public getPublicKey(): string {
-    return this.wallet.publicKey;
+    return this.signingKey.publicKey;
   }
 
   public getPublicKeyType(): string {
@@ -113,20 +133,24 @@ export class TestEncryptorExtension implements EncryptorExtension {
   }
 
   public computeSharedSecretKey(publicKey: string): string {
-    return this.wallet._signingKey().computeSharedSecret(publicKey);
+    return this.signingKey.computeSharedSecret(publicKey);
   }
 }
 
-export async function prepareEncryptor(signer: TestSigner, chain: Chain): Promise<Encryptor> {
+export async function prepareEncryptor(
+  walletClient: TestWalletClient,
+  privateKeyId?: number,
+): Promise<Encryptor> {
   const encryptor = new Encryptor({
-    encryptorExtension: new TestEncryptorExtension(signer),
+    encryptorExtension: new TestEncryptorExtension(privateKeyId),
     userConfig: {
-      signer,
-      chain: chain as UserReadyChain,
+      walletClient,
     },
   });
 
-  const isAddressInitialized = await encryptor.isUserAddressInitialized(await signer.getAddress());
+  const isAddressInitialized = await encryptor.isUserAddressInitialized(
+    await walletClient.getAddress(),
+  );
 
   if (!isAddressInitialized) {
     await encryptor.storePublicKey();

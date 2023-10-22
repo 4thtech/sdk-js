@@ -30,7 +30,7 @@
     },
     "test": {
       "executor": "@nrwl/vite:test",
-      "outputs": ["coverage/packages/ethereum"],
+      "outputs": ["{workspaceRoot}/coverage/packages/ethereum"],
       "options": {
         "passWithNoTests": true,
         "reportsDirectory": "../../coverage/packages/ethereum"

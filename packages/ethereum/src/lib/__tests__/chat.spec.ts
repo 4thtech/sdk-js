@@ -1,36 +1,31 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { prepareEncryptor, TestSigner } from './utils.spec';
-import { BigNumber } from 'ethers';
+import { prepareEncryptor, TestWalletClient } from './utils.spec';
 import { Chat } from '../chat';
-import { localhost } from '../chains';
 import {
-  ChatReadyChain,
+  Address,
   Conversation,
+  ConversationHash,
   EthereumTransactionResponse,
   Message,
 } from '@4thtech-sdk/types';
 
 // Initialize signer
-const signer = new TestSigner();
-const receiver = new TestSigner(1);
-const member1 = new TestSigner(2);
-const member2 = new TestSigner(3);
-
-// Define chain
-const testChain = localhost;
+const signer = new TestWalletClient();
+const receiver = new TestWalletClient(1);
+const member1 = new TestWalletClient(2);
+const member2 = new TestWalletClient(3);
 
 // Define chat objects
 const chat = new Chat({
-  signer,
-  chain: testChain as ChatReadyChain,
+  walletClient: signer,
 });
 
 describe('Chat', () => {
-  let senderAddress: string;
-  let receiverAddress: string;
+  let senderAddress: Address;
+  let receiverAddress: Address;
   let message: Message;
-  let conversationHash: string;
-  let messageCountBefore: BigNumber;
+  let conversationHash: ConversationHash;
+  let messageCountBefore: bigint;
 
   beforeEach(async () => {
     senderAddress = await signer.getAddress();
@@ -49,23 +44,23 @@ describe('Chat', () => {
 
     const txResponse = await sendFunction();
 
-    expect(txResponse.hash).toBeDefined();
-    expect(txResponse.hash).toMatch(/^0x([A-Fa-f0-9]{64})$/);
+    expect(txResponse).toBeDefined();
+    expect(txResponse).toMatch(/^0x([A-Fa-f0-9]{64})$/);
 
     // Check if message count increased by 1 after sending the message
     const messageCountAfter = await chat.countMessages(conversationHash);
-    expect(messageCountAfter.sub(messageCountBefore)).toEqual(BigNumber.from(1));
+    expect(messageCountAfter - messageCountBefore).toEqual(1n);
 
     const receivedMessages = await chat.fetchConversationMessagesPaginated(
       conversationHash,
       messageCountAfter,
-      1,
+      1n,
     );
 
     expect(receivedMessages[0]).toMatchObject({
       ...message,
       sender: senderAddress,
-      index: messageCountAfter.sub(1).toNumber(),
+      index: messageCountAfter - 1n,
       isDeleted: false,
     });
 
@@ -87,12 +82,11 @@ describe('Chat', () => {
       });
 
       describe('Encrypted messages', async () => {
-        const encryptor = await prepareEncryptor(signer, testChain);
-        await prepareEncryptor(receiver, testChain);
+        const encryptor = await prepareEncryptor(signer);
+        await prepareEncryptor(receiver, 1);
 
         const chat = new Chat({
-          signer,
-          chain: testChain as ChatReadyChain,
+          walletClient: signer,
           encryptor,
         });
 
@@ -110,14 +104,14 @@ describe('Chat', () => {
       it('Should delete message', async () => {
         await chat.sendMessage(receiverAddress, message, false);
         const messageCount = await chat.countMessages(conversationHash);
-        const messageIndex = messageCount.sub(1);
+        const messageIndex = messageCount - 1n;
 
         await chat.deleteMessage(conversationHash, messageIndex);
 
         const receivedMessages = await chat.fetchConversationMessagesPaginated(
           conversationHash,
           messageCount,
-          1,
+          1n,
         );
 
         expect(receivedMessages[0].content).to.be.equal('');
@@ -206,12 +200,11 @@ describe('Chat', () => {
         const conversationName = 'Encrypted Group Conversation';
         let lastConversation: Conversation;
 
-        const encryptor = await prepareEncryptor(signer, testChain);
-        await prepareEncryptor(receiver, testChain);
+        const encryptor = await prepareEncryptor(signer);
+        await prepareEncryptor(receiver, 1);
 
         const chat = new Chat({
-          signer,
-          chain: testChain as ChatReadyChain,
+          walletClient: signer,
           encryptor,
         });
 
@@ -231,8 +224,7 @@ describe('Chat', () => {
         it('Should add encrypted message to a group conversations', async () => {
           // Test on clean chat instance which doesn't have initialized any encryption's
           const chatClean = new Chat({
-            signer,
-            chain: testChain as ChatReadyChain,
+            walletClient: signer,
             encryptor,
           });
 
@@ -261,7 +253,7 @@ describe('Chat', () => {
 
       expect(conversation).toBeDefined();
       expect(conversation.members.length).to.be.greaterThanOrEqual(2);
-      expect((await chat.countMessages(conversationHash)).toNumber()).to.be.greaterThanOrEqual(1);
+      expect((await chat.countMessages(conversationHash)) > 0).toBeTruthy();
     });
 
     it('Should fetch conversations', async () => {
@@ -271,8 +263,8 @@ describe('Chat', () => {
     });
 
     it('Should fetch messages paginated', async () => {
-      const pageNumber = 1;
-      const pageSize = 10;
+      const pageNumber = 1n;
+      const pageSize = 10n;
       const messages = await chat.fetchConversationMessagesPaginated(
         conversationHash,
         pageNumber,
@@ -311,7 +303,7 @@ describe('Chat', () => {
 
       await chat.sendMessage(receiverAddress, message, false);
       const messageCount = await chat.countMessages(conversationHash);
-      const messageIndex = messageCount.sub(1);
+      const messageIndex = messageCount - 1n;
 
       await chat.deleteMessage(conversationHash, messageIndex);
     });

@@ -1,4 +1,4 @@
-import { RequestCallback } from '@4thtech-sdk/types';
+import { EncryptorExtensionCallback } from '@4thtech-sdk/types';
 
 enum EventName {
   BLOCK_LABS_ENCRYPTOR_HANDSHAKE = 'block_labs_encryptor_handshake',
@@ -14,7 +14,7 @@ type RequestData = {
 
 export class EncryptorEventHandler {
   private currentId = 1;
-  private requests: Record<number, RequestCallback> = {};
+  private requests: Record<number, EncryptorExtensionCallback> = {};
   private handshakeCallback: (() => void) | null = null;
 
   constructor() {
@@ -26,7 +26,7 @@ export class EncryptorEventHandler {
     this.dispatchCustomEvent(EventName.BLOCK_LABS_ENCRYPTOR_HANDSHAKE, {});
   }
 
-  public getState(callback: RequestCallback): void {
+  public getState(callback: EncryptorExtensionCallback): void {
     this.dispatchCustomEvent(
       EventName.BLOCK_LABS_ENCRYPTOR_REQUEST,
       { type: 'getEncryptorState' },
@@ -34,7 +34,7 @@ export class EncryptorEventHandler {
     );
   }
 
-  public getPublicKey(callback: RequestCallback): void {
+  public getPublicKey(callback: EncryptorExtensionCallback): void {
     this.dispatchCustomEvent(
       EventName.BLOCK_LABS_ENCRYPTOR_REQUEST,
       { type: 'getPublicKey' },
@@ -42,7 +42,7 @@ export class EncryptorEventHandler {
     );
   }
 
-  public computeSharedSecretKey(publicKey: string, callback: RequestCallback): void {
+  public computeSharedSecretKey(publicKey: string, callback: EncryptorExtensionCallback): void {
     this.dispatchCustomEvent(
       EventName.BLOCK_LABS_ENCRYPTOR_REQUEST,
       { type: 'computeSharedSecretKey', publicKey },
@@ -50,7 +50,11 @@ export class EncryptorEventHandler {
     );
   }
 
-  private dispatchCustomEvent(name: string, data: RequestData, callback?: RequestCallback): void {
+  private dispatchCustomEvent(
+    name: string,
+    data: RequestData,
+    callback?: EncryptorExtensionCallback,
+  ): void {
     if (callback) {
       this.requests[this.currentId] = callback;
     }

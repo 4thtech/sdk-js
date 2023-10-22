@@ -1,46 +1,39 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
+  Address,
   Encryption,
   Envelope,
   EthereumTransactionResponse,
   isRemoteFileInfo,
-  MailReadyChain,
 } from '@4thtech-sdk/types';
-import { prepareEncryptor, TestRemoteStorageProvider, TestSigner } from './utils.spec';
-import { BigNumber } from 'ethers';
+import { prepareEncryptor, TestRemoteStorageProvider, TestWalletClient } from './utils.spec';
 import path from 'path';
 import { Mail } from '../mail';
-import { localhost } from '../chains';
 import { AesEncryption, EncryptionHandler, EncryptorAesEncryption } from '@4thtech-sdk/encryption';
 import * as fs from 'fs';
 
 // Initialize signer
-const signer = new TestSigner();
-const receiver = new TestSigner(1);
-
-// Define chain
-const testChain = localhost;
+const signer = new TestWalletClient();
+const receiver = new TestWalletClient(1);
 
 // Define remote storage provider
 const remoteStorageProvider = new TestRemoteStorageProvider();
 
 // Define mail objects
 const mail = new Mail({
-  signer,
-  chain: testChain as MailReadyChain,
+  walletClient: signer,
   remoteStorageProvider,
 });
 
 const mailAsReceiver = new Mail({
-  signer: receiver,
-  chain: testChain as MailReadyChain,
+  walletClient: receiver,
   remoteStorageProvider,
 });
 
 describe('Mail', () => {
   describe('Storing', async () => {
     let envelope: Envelope;
-    let mailCountBefore: BigNumber;
+    let mailCountBefore: bigint;
 
     const firstLocalAttachmentPath = path.resolve(__dirname, './files/test-attachment-1.txt');
     const firstLocalAttachmentContent = await fs.promises.readFile(
@@ -85,25 +78,22 @@ describe('Mail', () => {
           },
         });
 
-        expect(txResponse.hash).toBeDefined();
-        expect(txResponse.hash).toMatch(/^0x([A-Fa-f0-9]{64})$/);
+        expect(txResponse).toBeDefined();
+        expect(txResponse).toMatch(/^0x([A-Fa-f0-9]{64})$/);
 
         // Check if mail count increased by 1 after sending the mail
         const mailCountAfter = await mail.count(await receiver.getAddress());
-        expect(mailCountAfter.sub(mailCountBefore)).toEqual(BigNumber.from(1));
+        expect(mailCountAfter - mailCountBefore).toEqual(1n);
 
-        const receivedEnvelope = await mail.fetch(
-          await receiver.getAddress(),
-          mailCountAfter.sub(1),
-        );
+        const receivedEnvelope = await mail.fetch(await receiver.getAddress(), mailCountAfter - 1n);
 
         expect(receivedEnvelope).toMatchObject({
           ...envelope,
-          openedAt: 0,
-          index: mailCountAfter.sub(1).toNumber(),
+          openedAt: 0n,
+          index: mailCountAfter - 1n,
           isDeleted: false,
           metadata: {
-            transactionHash: txResponse.hash,
+            transactionHash: txResponse,
           },
         });
 
@@ -127,8 +117,7 @@ describe('Mail', () => {
         });
 
         mail = new Mail({
-          signer,
-          chain: testChain as MailReadyChain,
+          walletClient: signer,
           remoteStorageProvider,
           encryptionHandler,
         });
@@ -147,7 +136,7 @@ describe('Mail', () => {
         });
 
         const mailCount = await mail.count(await receiver.getAddress());
-        const receivedEnvelope = await mail.fetch(await receiver.getAddress(), mailCount.sub(1));
+        const receivedEnvelope = await mail.fetch(await receiver.getAddress(), mailCount - 1n);
         const attachments = receivedEnvelope.content.attachments;
 
         expect(attachments?.length).to.be.equal(3);
@@ -177,8 +166,8 @@ describe('Mail', () => {
 
       it('Should encrypt with Encryptor AES and store correctly', async () => {
         // Prepare encryptor
-        const senderEncryptor = await prepareEncryptor(signer, testChain);
-        const receiverEncryptor = await prepareEncryptor(receiver, testChain);
+        const senderEncryptor = await prepareEncryptor(signer);
+        const receiverEncryptor = await prepareEncryptor(receiver, 1);
 
         // Prepare encryption
         const senderEncryptorAesEncryption = new EncryptorAesEncryption(senderEncryptor);
@@ -206,7 +195,7 @@ describe('Mail', () => {
 
       // Set opened at as a receiver of the mail
       const mailCount = await mailAsReceiver.count(await receiver.getAddress());
-      const mailIndex = mailCount.sub(1);
+      const mailIndex = mailCount - 1n;
 
       await mailAsReceiver.setOpenedAt(mailIndex);
       const envelope = await mailAsReceiver.fetch(await receiver.getAddress(), mailIndex);
@@ -218,7 +207,7 @@ describe('Mail', () => {
       await mail.send({ envelope });
 
       const mailCount = await mail.count(await receiver.getAddress());
-      const mailIndex = mailCount.sub(1);
+      const mailIndex = mailCount - 1n;
 
       await mailAsReceiver.deleteMail(mailIndex);
 
@@ -230,7 +219,7 @@ describe('Mail', () => {
       await mail.send({ envelope });
 
       const mailCount = await mail.count(await receiver.getAddress());
-      const mailIndexes = [mailCount.sub(1), mailCount.sub(2)];
+      const mailIndexes = [mailCount - 1n, mailCount - 2n];
 
       await mailAsReceiver.deleteMails(mailIndexes);
 
@@ -257,12 +246,12 @@ describe('Mail', () => {
 
     beforeAll(async () => {
       txResponse = await mail.send({ envelope });
-      await txResponse.wait();
+      // await txResponse.wait();
     });
 
     it('Should fetch mail', async () => {
       const mailCount = await mail.count(await receiver.getAddress());
-      const mailIndex = mailCount.sub(1);
+      const mailIndex = mailCount - 1n;
       const envelope = await mail.fetch(receiverAddress, mailIndex);
 
       expect(envelope).toBeDefined();
@@ -277,10 +266,8 @@ describe('Mail', () => {
     });
 
     it('Should fetch mails paginated', async () => {
-      const mailCount = await mail.count(await receiver.getAddress());
-
-      const pageNumber = mailCount;
-      const pageSize = 1;
+      const pageNumber = await mail.count(receiverAddress);
+      const pageSize = 1n;
       const envelopes = await mail.fetchPaginated(receiverAddress, pageNumber, pageSize);
 
       expect(envelopes).toBeDefined();
@@ -288,7 +275,7 @@ describe('Mail', () => {
     });
 
     it('Should fetch mail by tx hash', async () => {
-      const receivedEnvelope = await mail.fetchByTransactionHash(txResponse.hash);
+      const receivedEnvelope = await mail.fetchByTransactionHash(txResponse);
 
       expect(receivedEnvelope).toMatchObject(envelope);
     });
@@ -296,8 +283,7 @@ describe('Mail', () => {
     it('Should count mails', async () => {
       const mailCount = await mail.count(receiverAddress);
 
-      expect(mailCount).toBeInstanceOf(BigNumber);
-      expect(mailCount.toNumber()).to.be.greaterThan(0);
+      expect(mailCount > 0n).toBeTruthy();
     });
 
     it('Should get user app ids', async () => {
@@ -308,7 +294,7 @@ describe('Mail', () => {
 
     it('Should download attachment', async () => {
       const mailCount = await mail.count(await receiver.getAddress());
-      const mailIndex = mailCount.sub(1);
+      const mailIndex = mailCount - 1n;
       const envelope = await mail.fetch(receiverAddress, mailIndex);
 
       if (envelope.content.attachments?.length) {
@@ -324,8 +310,8 @@ describe('Mail', () => {
   });
 
   describe('Events', () => {
-    let senderAddress: string;
-    let receiverAddress: string;
+    let senderAddress: Address;
+    let receiverAddress: Address;
     let envelope: Envelope;
 
     beforeAll(async () => {
@@ -369,7 +355,7 @@ describe('Mail', () => {
       await mail.send({ envelope });
 
       const mailCount = await mail.count(receiverAddress);
-      const mailIndex = mailCount.sub(1);
+      const mailIndex = mailCount - 1n;
 
       await mailAsReceiver.setOpenedAt(mailIndex);
     });
@@ -383,7 +369,7 @@ describe('Mail', () => {
       await mail.send({ envelope });
 
       const mailCount = await mail.count(receiverAddress);
-      const mailIndex = mailCount.sub(1);
+      const mailIndex = mailCount - 1n;
 
       await mailAsReceiver.deleteMail(mailIndex);
     });

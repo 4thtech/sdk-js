@@ -1,10 +1,14 @@
 import { ChatConfig } from '../chat';
-import chatAbi from './abi/chat-abi.json';
+import { chatAbi } from './abi/chat-abi';
 import {
+  Address,
   ContractConversationOutput,
+  ContractConversationOutputs,
   ContractEncryptedSecretKeyDataOutput,
   ContractMessageOutput,
+  ContractMessageOutputs,
   Conversation,
+  ConversationHash,
   EncryptedMessage,
   EncryptedSecretKeyData,
   Encryption,
@@ -16,20 +20,22 @@ import {
 } from '@4thtech-sdk/types';
 import { FeeCollectorContract } from './fee-collector-contract';
 import { AesEncryption, EncryptionHandler, EncryptorAesEncryption } from '@4thtech-sdk/encryption';
+import { validateChainContractExistence } from '../utils';
 
-export class ChatContract extends FeeCollectorContract {
+export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
   protected readonly encryptionHandler?: EncryptionHandler;
 
   constructor(config: ChatConfig) {
-    const { signer, chain, appId, encryptor } = config;
+    const { walletClient, appId, encryptor } = config;
+
+    validateChainContractExistence(walletClient.chain.contracts, 'chat');
 
     super({
-      signer,
-      contractParams: {
-        address: chain.contracts.chat.address,
-        abi: chain.contracts.chat.abi ?? JSON.stringify(chatAbi),
+      walletClient,
+      contractConfig: {
+        address: walletClient.chain.contracts.chat.address,
+        abi: chatAbi,
       },
-      chain,
       appId,
     });
 
@@ -55,7 +61,7 @@ export class ChatContract extends FeeCollectorContract {
   }
 
   protected async decryptMessage(
-    conversationHash: string,
+    conversationHash: ConversationHash,
     encryptedMessage: EncryptedMessage,
   ): Promise<string> {
     if (!this.encryptionHandler) {
@@ -131,7 +137,7 @@ export class ChatContract extends FeeCollectorContract {
 
   protected async encryptSecretKeyForMembers(
     secretKey: string,
-    members: string[],
+    members: Address[],
   ): Promise<string[]> {
     return Promise.all(members.map((member) => this.encryptSecretKey(secretKey, member)));
   }
@@ -155,7 +161,7 @@ export class ChatContract extends FeeCollectorContract {
   }
 
   protected async getEncryptionForOneToOneConversation(
-    receiver: string,
+    receiver: Address,
   ): Promise<EncryptorAesEncryption> {
     if (!this.encryptionHandler) {
       throw new Error(
@@ -172,7 +178,7 @@ export class ChatContract extends FeeCollectorContract {
   }
 
   protected async getEncryptionForGroupConversation(
-    conversationHash: string,
+    conversationHash: ConversationHash,
   ): Promise<AesEncryption> {
     if (!this.encryptionHandler) {
       throw new Error(
@@ -206,7 +212,7 @@ export class ChatContract extends FeeCollectorContract {
   }
 
   protected async processContractConversationOutputs(
-    contactConversationOutputs: ContractConversationOutput[],
+    contactConversationOutputs: ContractConversationOutputs,
   ): Promise<Conversation[]> {
     const processedOutputs = await Promise.allSettled(
       contactConversationOutputs.map(async (contactConversationOutput) => {
@@ -222,7 +228,7 @@ export class ChatContract extends FeeCollectorContract {
 
   protected async processContractMessageOutput(
     contractMessageOutput: ContractMessageOutput | MessageSentEventOutput,
-    conversationHash: string,
+    conversationHash: ConversationHash,
   ): Promise<ReceivedMessage> {
     const { sender, sentAt, metadata, index, isDeleted } = contractMessageOutput;
     let { content } = contractMessageOutput;
@@ -241,15 +247,15 @@ export class ChatContract extends FeeCollectorContract {
     return {
       sender,
       content,
-      sentAt: sentAt.toNumber(),
-      index: index.toNumber(),
+      sentAt,
+      index,
       isDeleted,
     };
   }
 
   protected async processContractMessageOutputs(
-    contractMessageOutputs: ContractMessageOutput[],
-    conversationHash: string,
+    contractMessageOutputs: ContractMessageOutputs,
+    conversationHash: ConversationHash,
   ): Promise<ReceivedMessage[]> {
     const processedOutputs = await Promise.allSettled(
       contractMessageOutputs.map(async (contractMessageOutput) => {
@@ -280,22 +286,24 @@ export class ChatContract extends FeeCollectorContract {
   }
 
   private async getEncryptionSecretKeyForGroupConversation(
-    conversationHash: string,
+    conversationHash: ConversationHash,
   ): Promise<string> {
     const signerAddress = await this.getSignerAddress();
 
     // TODO: implement caching
 
-    const encryptedSecretKeyDataOutput = await this.contract['getEncryptedSecretKey'](
-      conversationHash,
-      signerAddress,
-    );
+    const encryptedSecretKeyDataOutput = await this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getEncryptedSecretKey',
+      args: [conversationHash, signerAddress],
+    });
+
     const encryptionSecretKey = await this.decryptSecretKey(encryptedSecretKeyDataOutput);
 
     return Buffer.from(encryptionSecretKey).toString();
   }
 
-  private getReceiverFromConversation(conversation: Conversation, signerAddress: string): string {
+  private getReceiverFromConversation(conversation: Conversation, signerAddress: Address): Address {
     return signerAddress === conversation.members[0]
       ? conversation.members[1]
       : conversation.members[0];

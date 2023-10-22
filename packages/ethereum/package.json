@@ -3,11 +3,7 @@
   "version": "0.2.4",
   "type": "commonjs",
   "dependencies": {
-    "ethers": "^5.7.2",
-    "lodash.merge": "^4.6.2"
-  },
-  "devDependencies": {
-    "@types/lodash.merge": "^4.6.7",
-    "ts-essentials": "^9.3.0"
+    "ethers": "^6.8.0",
+    "viem": "^1.16.6"
   }
 }

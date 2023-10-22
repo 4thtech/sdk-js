@@ -1,6 +1,8 @@
 import {
+  Address,
   Attachment,
   ContractMailOutput,
+  ContractMailOutputs,
   Envelope,
   EnvelopeTransactionFilter,
   isLocalFileInfo,
@@ -14,24 +16,26 @@ import {
   RemoteFileInfo,
   TransactionHash,
 } from '@4thtech-sdk/types';
-import mailsAbi from './abi/mails-abi.json';
+import { mailsAbi } from './abi/mails-abi';
 import { RemoteStorage } from '@4thtech-sdk/storage';
-import { MailConfig } from '@4thtech-sdk/ethereum';
+import { MailConfig } from '../mail';
 import { FeeCollectorContract } from './fee-collector-contract';
+import { validateChainContractExistence } from '../utils';
 
-export class MailContract extends FeeCollectorContract {
+export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
   protected remoteStorage: RemoteStorage;
 
   constructor(config: MailConfig) {
-    const { signer, chain, remoteStorageProvider, appId, encryptionHandler } = config;
+    const { walletClient, remoteStorageProvider, appId, encryptionHandler } = config;
+
+    validateChainContractExistence(walletClient.chain.contracts, 'mail');
 
     super({
-      signer,
-      contractParams: {
-        address: chain.contracts.mail.address,
-        abi: chain.contracts.mail.abi ?? JSON.stringify(mailsAbi),
+      walletClient,
+      contractConfig: {
+        address: walletClient.chain.contracts.mail.address,
+        abi: mailsAbi,
       },
-      chain,
       appId,
     });
 
@@ -42,8 +46,8 @@ export class MailContract extends FeeCollectorContract {
   }
 
   protected async processContractMailOutputs(
-    contractMailOutputs: ContractMailOutput[],
-    receiver: string,
+    contractMailOutputs: ContractMailOutputs,
+    receiver: Address,
   ): Promise<ReceivedEnvelope[]> {
     const processedOutputs = await Promise.allSettled(
       contractMailOutputs.map(async (contractMailOutput) => {
@@ -59,7 +63,7 @@ export class MailContract extends FeeCollectorContract {
 
   protected async processContractMailOutput(
     contractMailOutput: ContractMailOutput | MailSentEventOutput,
-    receiver: string,
+    receiver: Address,
   ): Promise<ReceivedEnvelope> {
     const { sender, envelopeUrl, envelopeChecksum, sentAt, openedAt, metadata, index, isDeleted } =
       contractMailOutput;
@@ -95,9 +99,9 @@ export class MailContract extends FeeCollectorContract {
       content: envelopeResult.value.content,
       receiver,
       sender,
-      sentAt: sentAt.toNumber(),
-      openedAt: openedAt.toNumber(),
-      index: index.toNumber(),
+      sentAt,
+      openedAt,
+      index,
       isDeleted,
       metadata: {
         URL: envelopeUrl,
@@ -155,52 +159,27 @@ export class MailContract extends FeeCollectorContract {
 
   protected async getEnvelopeByTransactionHash(
     transactionHash: TransactionHash,
+    receiver?: Address,
   ): Promise<ReceivedEnvelope> {
-    const filter = this.contract.filters['MailSent']();
-    const allReceivedEvents = await this.contract.queryFilter(filter);
+    const allMatchingEvents = await this.publicClient.getContractEvents({
+      ...this.contractConfig,
+      eventName: 'MailSent',
+      args: {
+        receiver,
+      },
+      fromBlock: 'earliest',
+      strict: true,
+    });
 
-    const filtered = allReceivedEvents.filter(
-      (
-        event,
-      ): event is Exclude<
-        typeof event,
-        {
-          args: null;
-        }
-      > => event.transactionHash === transactionHash && event.args !== null,
-    );
+    const event = allMatchingEvents.find((event) => {
+      return transactionHash === event.transactionHash;
+    });
 
-    if (!filtered[0].args) {
+    if (!event) {
       throw new Error('Mail with this transaction hash was not sent.');
     }
 
-    const {
-      appId,
-      sender,
-      receiver,
-      envelopeUrl,
-      envelopeChecksum,
-      sentAt,
-      openedAt,
-      metadata,
-      index,
-      isDeleted,
-    } = filtered[0].args;
-
-    const eventOutput: MailSentEventOutput = {
-      appId,
-      sender,
-      receiver,
-      envelopeUrl,
-      envelopeChecksum,
-      sentAt,
-      openedAt,
-      metadata,
-      index,
-      isDeleted,
-    };
-
-    return this.processContractMailOutput(eventOutput, receiver);
+    return this.processContractMailOutput(event.args, event.args.receiver);
   }
 
   private separateLocalAndRemoteAttachments(
@@ -228,31 +207,27 @@ export class MailContract extends FeeCollectorContract {
 
   private async getEnvelopeTransactionHash(
     filterData: EnvelopeTransactionFilter,
-  ): Promise<TransactionHash> {
-    const filter = this.contract.filters['MailSent'](
-      null,
-      filterData.sender,
-      filterData.receiver,
-      null,
-      null,
-      null,
-      null,
-      null,
-      filterData.index,
-    );
-    const allReceivedEvents = await this.contract.queryFilter(filter);
+  ): Promise<TransactionHash | undefined> {
+    const allMatchingEvents = await this.publicClient.getContractEvents({
+      ...this.contractConfig,
+      eventName: 'MailSent',
+      args: {
+        sender: filterData.sender,
+        receiver: filterData.receiver,
+        index: filterData.index,
+      },
+      fromBlock: 'earliest',
+      strict: true,
+    });
 
-    const filtered = allReceivedEvents.filter((event) => {
-      if (!event.args) {
-        return;
-      }
+    const event = allMatchingEvents.find(({ args: { appId, envelopeUrl, envelopeChecksum } }) => {
       return (
-        event.args['appId'] === this.appId &&
-        event.args['envelopeUrl'] === filterData.envelopeUrl &&
-        event.args['envelopeChecksum'] === filterData.envelopeChecksum
+        appId === this.appId &&
+        envelopeUrl === filterData.envelopeUrl &&
+        envelopeChecksum === filterData.envelopeChecksum
       );
     });
 
-    return filtered[0].transactionHash as TransactionHash;
+    return event?.transactionHash;
   }
 }

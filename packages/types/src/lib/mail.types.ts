@@ -1,28 +1,24 @@
-import { BigNumber, BigNumberish } from 'ethers';
-import { EthereumTransactionResponse } from './ethereum.types';
+import { Address, AppId, EthereumTransactionResponse, TransactionHash } from './ethereum.types';
 import { LocalFileInfo, RemoteFileInfo } from './storage.types';
 import { Encryption } from './encryption.types';
+import { WatchContractEventReturnType } from 'viem';
 
 export type Attachment = LocalFileInfo | RemoteFileInfo;
 
-export type TransactionHash = `0x${string}` | string;
-
-export type EnvelopeContent = {
-  subject: string;
-  body?: string;
-  attachments?: Attachment[];
-};
-
 export type Envelope = {
-  content: EnvelopeContent;
-  receiver: string;
-  sender: string;
+  content: {
+    subject: string;
+    body?: string;
+    attachments?: Attachment[];
+  };
+  receiver: Address;
+  sender: Address;
 };
 
 export type ReceivedEnvelope = Envelope & {
-  sentAt: number;
-  openedAt: number;
-  index: number;
+  sentAt: bigint;
+  openedAt: bigint;
+  index: bigint;
   isDeleted: boolean;
   metadata: {
     URL: string;
@@ -34,43 +30,43 @@ export type ReceivedEnvelope = Envelope & {
 export interface Mailable {
   send(options: MailSendOptions): Promise<EthereumTransactionResponse>;
 
-  setOpenedAt(mailIndex: BigNumberish): Promise<EthereumTransactionResponse>;
+  setOpenedAt(mailIndex: bigint): Promise<EthereumTransactionResponse>;
 
-  deleteMail(mailIndex: BigNumberish): Promise<EthereumTransactionResponse>;
+  deleteMail(mailIndex: bigint): Promise<EthereumTransactionResponse>;
 
-  deleteMails(mailIndexes: BigNumberish[]): Promise<EthereumTransactionResponse>;
+  deleteMails(mailIndexes: bigint[]): Promise<EthereumTransactionResponse>;
 
-  fetch(receiver: string, mailIndex: BigNumberish): Promise<ReceivedEnvelope>;
+  fetch(receiver: Address, mailIndex: bigint): Promise<ReceivedEnvelope>;
 
-  fetchAll(receiver: string): Promise<ReceivedEnvelope[]>;
+  fetchAll(receiver: Address): Promise<ReceivedEnvelope[]>;
 
-  fetchPaginated(receiver: string, page: number, pageSize: number): Promise<ReceivedEnvelope[]>;
+  fetchPaginated(receiver: Address, page: bigint, pageSize: bigint): Promise<ReceivedEnvelope[]>;
 
   fetchByTransactionHash(transactionHash: TransactionHash): Promise<ReceivedEnvelope>;
 
-  count(receiver: string): Promise<BigNumber>;
+  count(receiver: Address): Promise<bigint>;
 
-  getUserAppIds(user: string): Promise<string[]>;
+  getUserAppIds(user: Address): Promise<ReadonlyArray<AppId>>;
 
   downloadAttachment(attachment: RemoteFileInfo): Promise<ArrayBufferLike>;
 
   onNew(
-    sender: string | null,
-    receiver: string | null,
+    sender: Address | null,
+    receiver: Address | null,
     callback: (envelope: ReceivedEnvelope) => void,
-  ): void;
+  ): WatchContractEventReturnType;
 
   onOpened(
-    receiver: string | null,
-    index: BigNumberish | null,
-    callback: (index: number, openedAt: number) => void,
-  ): void;
+    receiver: Address | null,
+    index: bigint | null,
+    callback: (index: bigint, openedAt: bigint) => void,
+  ): WatchContractEventReturnType;
 
   onDeleted(
-    receiver: string | null,
-    index: BigNumberish | null,
-    callback: (index: number, deletedAt: number) => void,
-  ): void;
+    receiver: Address | null,
+    index: bigint | null,
+    callback: (index: bigint, deletedAt: bigint) => void,
+  ): WatchContractEventReturnType;
 }
 
 export type MailSendOptions = {
@@ -93,59 +89,52 @@ export type FileProgressInfo = {
   fileName?: string;
 };
 
-export type ContractMailOutput = [
-  string,
-  string,
-  string,
-  BigNumber,
-  BigNumber,
-  string,
-  BigNumber,
-  boolean,
-] & {
-  sender: string;
+export type ContractMailOutput = {
+  sender: Address;
   envelopeUrl: string;
   envelopeChecksum: string;
-  sentAt: BigNumber;
-  openedAt: BigNumber;
+  sentAt: bigint;
+  openedAt: bigint;
   metadata: string;
-  index: BigNumber;
+  index: bigint;
   isDeleted: boolean;
 };
 
+export type ContractMailOutputs = ReadonlyArray<ContractMailOutput>;
+
 export type MailSentEventOutput = {
-  appId: string;
-  sender: string;
-  receiver: string;
+  appId: AppId;
+  sender: Address;
+  receiver: Address;
   envelopeUrl: string;
   envelopeChecksum: string;
-  sentAt: BigNumber;
-  openedAt: BigNumber;
+  sentAt: bigint;
+  openedAt: bigint;
   metadata: string;
-  index: BigNumber;
+  index: bigint;
   isDeleted: boolean;
 };
 
 export type MailOpenedEventOutput = {
-  appId: string;
-  receiver: string;
-  index: BigNumber;
-  openedAt: BigNumber;
+  appId: AppId;
+  receiver: Address;
+  index: bigint;
+  openedAt: bigint;
 };
 
 export type MailDeletedEventOutput = {
-  appId: string;
-  receiver: string;
-  index: BigNumber;
-  deletedAt: BigNumber;
+  appId: AppId;
+  receiver: Address;
+  index: bigint;
+  deletedAt: bigint;
 };
 
 export type EnvelopeTransactionFilter = {
-  sender: string;
-  receiver: string;
+  sender: Address;
+  receiver: Address;
   envelopeUrl: string;
   envelopeChecksum: string;
-  sentAt: BigNumber;
+  sentAt: bigint;
   metadata: string;
-  index: BigNumber;
+  index: bigint;
 };

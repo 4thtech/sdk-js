@@ -88,7 +88,6 @@ export class EncryptorAesEncryption implements Encryption {
     // Attempt to get the cached shared secret
     const cachedSecret = await this.getCachedSharedSecret(publicKey);
     if (cachedSecret) {
-      console.log('received from cache :D', cachedSecret);
       return cachedSecret;
     }
 

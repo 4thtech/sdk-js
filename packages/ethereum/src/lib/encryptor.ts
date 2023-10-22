@@ -1,4 +1,5 @@
 import {
+  Address,
   EncryptorExtension,
   EncryptorService,
   EncryptorState,
@@ -21,11 +22,11 @@ export class Encryptor implements EncryptorService {
     this.user = new User(config.userConfig);
   }
 
-  public async isUserAddressInitialized(address: string): Promise<boolean> {
+  public async isUserAddressInitialized(address: Address): Promise<boolean> {
     return !!(await this.retrieveUserPublicKey(address));
   }
 
-  public async retrieveUserPublicKey(address: string): Promise<string | undefined> {
+  public async retrieveUserPublicKey(address: Address): Promise<string | undefined> {
     const user = await this.user.fetch(address).catch(() => undefined);
 
     return user?.encryptionPublicKey.publicKey;
