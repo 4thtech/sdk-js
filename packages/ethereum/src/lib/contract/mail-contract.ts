@@ -99,8 +99,8 @@ export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
       content: envelopeResult.value.content,
       receiver,
       sender,
-      sentAt,
-      openedAt,
+      sentAt: new Date(Number(sentAt * 1000n)),
+      openedAt: openedAt ? new Date(Number(openedAt * 1000n)) : undefined,
       index,
       isDeleted,
       metadata: {

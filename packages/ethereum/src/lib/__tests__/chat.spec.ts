@@ -64,7 +64,8 @@ describe('Chat', () => {
       isDeleted: false,
     });
 
-    expect(receivedMessages[0].sentAt).toBeGreaterThan(0);
+    expect(receivedMessages[0].sentAt).instanceof(Date);
+    expect(receivedMessages[0].sentAt?.valueOf()).toBeGreaterThan(0);
   }
 
   describe('Storing', () => {

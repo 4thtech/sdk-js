@@ -247,7 +247,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
     return {
       sender,
       content,
-      sentAt,
+      sentAt: new Date(Number(sentAt * 1000n)),
       index,
       isDeleted,
     };

@@ -16,8 +16,8 @@ export type Envelope = {
 };
 
 export type ReceivedEnvelope = Envelope & {
-  sentAt: bigint;
-  openedAt: bigint;
+  sentAt: Date;
+  openedAt: Date | undefined;
   index: bigint;
   isDeleted: boolean;
   metadata: {

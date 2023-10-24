@@ -89,7 +89,7 @@ describe('Mail', () => {
 
         expect(receivedEnvelope).toMatchObject({
           ...envelope,
-          openedAt: 0n,
+          openedAt: undefined,
           index: mailCountAfter - 1n,
           isDeleted: false,
           metadata: {
@@ -97,7 +97,8 @@ describe('Mail', () => {
           },
         });
 
-        expect(receivedEnvelope.sentAt).toBeGreaterThan(0);
+        expect(receivedEnvelope.sentAt).instanceof(Date);
+        expect(receivedEnvelope.sentAt.valueOf()).toBeGreaterThan(0);
         expect(typeof receivedEnvelope.metadata.URL).toBe('string');
         expect(receivedEnvelope.metadata.checksum).toHaveLength(64);
       });
@@ -200,7 +201,8 @@ describe('Mail', () => {
       await mailAsReceiver.setOpenedAt(mailIndex);
       const envelope = await mailAsReceiver.fetch(await receiver.getAddress(), mailIndex);
 
-      expect(envelope.openedAt).toBeGreaterThan(0);
+      expect(envelope.openedAt).instanceof(Date);
+      expect(envelope.openedAt?.valueOf()).toBeGreaterThan(0);
     });
 
     it('Should delete mail', async () => {

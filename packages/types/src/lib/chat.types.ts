@@ -29,7 +29,7 @@ export type EncryptedSecretKeyData = {
 export type ReceivedMessage = {
   sender: Address;
   content: string;
-  sentAt: bigint;
+  sentAt: Date;
   index: bigint;
   isDeleted: boolean;
 };
