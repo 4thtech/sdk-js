@@ -26,6 +26,8 @@ export type RemoteFileInfo = {
   metadata: string;
 };
 
+export type UploadProgressCallback = (percent: number, fileName?: string) => void;
+
 // TODO: move code bellow somewhere else??
 export function isPathBasedFileInfo(object: unknown): object is PathBasedFileInfo {
   if (object !== null && typeof object === 'object') {

@@ -13,9 +13,17 @@ const storage = new RemoteStorage({
 describe('Storage', () => {
   describe('Storage without encryption', () => {
     it('Should store a single file', async () => {
-      const remoteFileInfo = await storage.store({
-        path: path.resolve(__dirname, './files/metadata.json'),
-      });
+      const remoteFileInfo = await storage.store(
+        {
+          path: path.resolve(__dirname, './files/metadata.json'),
+        },
+        undefined,
+        (progressInfo) => {
+          console.log(progressInfo);
+        },
+      );
+
+      console.log(remoteFileInfo);
 
       expect(remoteFileInfo).toBeInstanceOf(Object);
       expect(remoteFileInfo).toHaveProperty('name');
@@ -25,14 +33,20 @@ describe('Storage', () => {
     });
 
     it('Should store a array of files', async () => {
-      const remoteFileInfos = (await storage.store([
-        {
-          path: path.resolve(__dirname, './files/metadata.json'),
+      const remoteFileInfos = (await storage.store(
+        [
+          {
+            path: path.resolve(__dirname, './files/metadata.json'),
+          },
+          {
+            path: path.resolve(__dirname, './files/example.txt'),
+          },
+        ],
+        undefined,
+        (progressInfo) => {
+          console.log(progressInfo);
         },
-        {
-          path: path.resolve(__dirname, './files/example.txt'),
-        },
-      ])) as RemoteFileInfo[];
+      )) as RemoteFileInfo[];
 
       expect(Array.isArray(remoteFileInfos)).toBe(true);
 
