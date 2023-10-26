@@ -31,16 +31,6 @@ export class PollinationX extends RemoteStorageProvider {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      //headers: {
-      //...formData.getHeaders(),
-      //'Content-Type': 'multipart/form-data'
-      //'Content-Length': 100_000_000, // TODO: calculate actual file size - 100M for big-file.txt
-      //},
-      // maxRate: 100 * 1024,
-      //maxRedirects: 0,
-      // TODO: pass upload info to the user
-      // maxContentLength: Infinity,
-      // maxBodyLength: Infinity,
       onUploadProgress: (progressEvent) => {
         if (progressEvent.loaded && progressEvent.total) {
           const percent = (progressEvent.loaded / progressEvent.total) * 100;
