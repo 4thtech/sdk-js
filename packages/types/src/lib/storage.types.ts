@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
 import { EncryptionMetaData } from './encryption.types';
 
-export type FileInput = Buffer | ArrayBuffer | Blob | Readable;
+export type FileInput = ArrayBuffer | Blob | Readable;
 
 export type PathBasedFileInfo = {
   name?: string;
@@ -10,7 +10,7 @@ export type PathBasedFileInfo = {
 
 export type ContentBasedFileInfo = {
   name: string;
-  content: Buffer | Blob;
+  content: ArrayBuffer | Blob;
 };
 
 export type LocalFileInfo = PathBasedFileInfo | ContentBasedFileInfo;

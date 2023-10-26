@@ -5,7 +5,7 @@ export abstract class RemoteStorageProvider {
 
   public abstract upload(file: FileInput, fileName?: string): Promise<string>;
 
-  public abstract download(url: string): Promise<ArrayBufferLike>;
+  public abstract download(url: string): Promise<ArrayBuffer>;
 
   public onUploadProgress(listener: UploadProgressCallback): void {
     this.uploadProgressListener = listener;

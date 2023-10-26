@@ -4,6 +4,7 @@ import { RemoteStorage } from '../remote-storage';
 import { pollinationX } from '../../../../../secrets.json';
 import { PollinationX } from '../remote/providers/pollination-x';
 import { RemoteFileInfo } from '@4thtech-sdk/types';
+import fs from 'fs';
 
 const remoteStorageProvider = new PollinationX(pollinationX.url, pollinationX.token);
 const storage = new RemoteStorage({
@@ -58,6 +59,21 @@ describe('Storage', () => {
       });
     });
 
+    it('Should upload a file by supplied Buffer', async () => {
+      const filePath = path.resolve(__dirname, './files/metadata.json');
+      const originalFileBuffer = fs.readFileSync(filePath);
+
+      const remoteFile = await storage.store({
+        content: originalFileBuffer,
+        name: 'metadata.json',
+      });
+
+      if (!Array.isArray(remoteFile)) {
+        const retrievedFile = await storage.retrieve(remoteFile);
+        expect(Buffer.from(retrievedFile)).to.deep.equal(originalFileBuffer);
+      }
+    });
+
     it('Should handle file retrieval', async () => {
       // Store a single file first to get the remote file info
       const storedFileInfo = (await storage.store({
@@ -66,7 +82,7 @@ describe('Storage', () => {
 
       const retrievedFile = await storage.retrieve(storedFileInfo);
 
-      expect(retrievedFile).toBeInstanceOf(Buffer);
+      expect(retrievedFile).toBeInstanceOf(ArrayBuffer);
     });
 
     // TODO: fix this test

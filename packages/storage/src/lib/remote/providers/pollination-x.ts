@@ -4,6 +4,7 @@ import FormData from 'form-data';
 import { extract, Headers } from 'tar-stream';
 import stream from 'stream';
 import { FileInput } from '@4thtech-sdk/types';
+import { concatenateArrayBuffers } from '@4thtech-sdk/utils';
 
 export class PollinationX extends RemoteStorageProvider {
   private readonly client: AxiosInstance;
@@ -55,7 +56,7 @@ export class PollinationX extends RemoteStorageProvider {
     return `https://gateway.btfs.io/btfs/${response.data.Hash}`;
   }
 
-  public async download(url: string): Promise<ArrayBufferLike> {
+  public async download(url: string): Promise<ArrayBuffer> {
     const urlObj = new URL(url);
     const response = await this.client.post('get', null, {
       params: {
@@ -64,26 +65,25 @@ export class PollinationX extends RemoteStorageProvider {
       responseType: 'arraybuffer',
     });
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const tarExtract = extract();
+      const chunks: ArrayBuffer[] = [];
 
       tarExtract.on(
         'entry',
         (header: Headers, stream: stream.Readable, next: (error?: unknown) => void) => {
           if (header.type === 'file') {
-            let fileBuffer = Buffer.alloc(0);
-
             stream.on('data', (chunk) => {
-              fileBuffer = Buffer.concat([fileBuffer, chunk]);
+              chunks.push(chunk);
             });
 
             stream.on('end', () => {
-              resolve(fileBuffer);
+              resolve(concatenateArrayBuffers(...chunks));
               next();
             });
+          } else {
+            stream.resume();
           }
-
-          stream.resume();
         },
       );
 

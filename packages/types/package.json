@@ -4,8 +4,5 @@
   "type": "commonjs",
   "dependencies": {
     "viem": "^1.16.6"
-  },
-  "devDependencies": {
-    "ts-essentials": "^9.3.0"
   }
 }

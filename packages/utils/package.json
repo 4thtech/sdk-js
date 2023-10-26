@@ -1,0 +1,17 @@
+{
+  "name": "@4thtech-sdk/utils",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./src/index.web.js",
+      "node": {
+        "import": "./src/index.js",
+        "require": "./src/index.js"
+      },
+      "import": "./src/index.web.js",
+      "require": "./src/index.web.js"
+    }
+  },
+  "main": "./src/index.js"
+}

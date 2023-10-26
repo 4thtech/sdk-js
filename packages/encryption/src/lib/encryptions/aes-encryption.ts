@@ -1,17 +1,11 @@
 import { Encryption, EncryptionMetaData, EncryptionType } from '@4thtech-sdk/types';
-import { webcrypto } from 'crypto';
-// import * as crypto from 'crypto';
-let crypto: Crypto | webcrypto.Crypto;
-
-if (typeof window !== 'undefined' && window.crypto) {
-  // Browser environment
-  crypto = window.crypto;
-} else {
-  // Node.js environment
-  import('crypto').then((cryptoModule) => {
-    crypto = cryptoModule.webcrypto;
-  });
-}
+import {
+  arrayBufferToHexString,
+  concatenateArrayBuffers,
+  getRandomValues,
+  hexStringToArrayBuffer,
+  subtle,
+} from '@4thtech-sdk/utils';
 
 export class AesEncryption implements Encryption {
   private readonly name = 'AES-GCM';
@@ -19,12 +13,9 @@ export class AesEncryption implements Encryption {
   private readonly type = EncryptionType.AES;
   private secretKey: CryptoKey | undefined;
 
-  public static async fromSecretKey(
-    secretKey: string,
-    encoding: BufferEncoding = 'hex',
-  ): Promise<AesEncryption> {
+  public static async fromSecretKey(secretKey: string): Promise<AesEncryption> {
     const aes = new AesEncryption();
-    await aes.importSecretKey(secretKey, encoding);
+    await aes.importSecretKey(secretKey);
     return aes;
   }
 
@@ -39,26 +30,26 @@ export class AesEncryption implements Encryption {
   }
 
   public async generateSecretKey(): Promise<void> {
-    this.secretKey = await this.getCrypto().subtle.generateKey(
-      { name: this.name, length: 256 },
-      true,
-      ['encrypt', 'decrypt'],
-    );
+    this.secretKey = await subtle.generateKey({ name: this.name, length: 256 }, true, [
+      'encrypt',
+      'decrypt',
+    ]);
   }
 
-  public async exportSecretKey(encoding: BufferEncoding = 'hex'): Promise<string> {
+  public async exportSecretKey(): Promise<string> {
     if (!this.secretKey) {
       throw new Error('Secret key has not been generated or imported.');
     }
 
-    const keyBuffer = await this.getCrypto().subtle.exportKey('raw', this.secretKey);
-    return Buffer.from(keyBuffer).toString(encoding);
+    const keyBuffer = await subtle.exportKey('raw', this.secretKey);
+
+    return arrayBufferToHexString(keyBuffer);
   }
 
-  public async importSecretKey(secretKey: string, encoding: BufferEncoding = 'hex'): Promise<void> {
-    const keyBuffer = Buffer.from(secretKey, encoding);
+  public async importSecretKey(secretKey: string): Promise<void> {
+    const keyBuffer = hexStringToArrayBuffer(secretKey);
 
-    this.secretKey = await this.getCrypto().subtle.importKey(
+    this.secretKey = await subtle.importKey(
       'raw',
       keyBuffer,
       { name: this.name, length: 256 },
@@ -72,15 +63,10 @@ export class AesEncryption implements Encryption {
       throw new Error('Secret key has not been generated or imported.');
     }
 
-    const iv = (this.getCrypto() as Crypto).getRandomValues(new Uint8Array(this.ivLength));
+    const iv = getRandomValues(new Uint8Array(this.ivLength));
 
-    const encryptedData = await this.getCrypto().subtle.encrypt(
-      { name: this.name, iv },
-      this.secretKey,
-      data,
-    );
-
-    return Buffer.concat([Buffer.from(iv), Buffer.from(encryptedData)]);
+    const encryptedData = await subtle.encrypt({ name: this.name, iv }, this.secretKey, data);
+    return concatenateArrayBuffers(iv, encryptedData);
   }
 
   public async decrypt(data: ArrayBuffer): Promise<ArrayBuffer> {
@@ -97,13 +83,6 @@ export class AesEncryption implements Encryption {
     const iv = dataBuffer.slice(0, this.ivLength);
     const encryptedData = dataBuffer.slice(this.ivLength);
 
-    return this.getCrypto().subtle.decrypt({ name: this.name, iv }, this.secretKey, encryptedData);
-  }
-
-  private getCrypto() {
-    if (!crypto) {
-      throw new Error('Crypto module is not available.');
-    }
-    return crypto;
+    return subtle.decrypt({ name: this.name, iv }, this.secretKey, encryptedData);
   }
 }

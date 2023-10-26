@@ -197,9 +197,9 @@ export class Mail extends MailContract implements Mailable {
   /**
    *  Downloads an attachment of a mail.
    * @param {RemoteFileInfo} attachment - The attachment information.
-   * @returns {Promise<ArrayBufferLike>} Array buffer of the downloaded file.
+   * @returns {Promise<ArrayBuffer>} Array buffer of the downloaded file.
    */
-  public downloadAttachment(attachment: RemoteFileInfo): Promise<ArrayBufferLike> {
+  public downloadAttachment(attachment: RemoteFileInfo): Promise<ArrayBuffer> {
     return this.remoteStorage.retrieve(attachment);
   }
 

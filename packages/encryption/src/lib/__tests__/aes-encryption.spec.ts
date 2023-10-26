@@ -33,7 +33,7 @@ describe('AesEncryption', () => {
     const secretKey = 'my-secret-key';
     const aes = new AesEncryption();
 
-    expect(aes.importSecretKey(secretKey, 'utf-8')).rejects.toThrowError('Invalid key length');
+    expect(aes.importSecretKey(secretKey)).rejects.toThrowError('Invalid hex string length');
   });
 
   it('Should reject when encrypting without a secret key', async () => {

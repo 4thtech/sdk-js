@@ -4,7 +4,6 @@ export * from './lib/encryption.types';
 export * from './lib/encryptor.types';
 export * from './lib/ethereum.types';
 export * from './lib/mail.types';
-export * from './lib/network.types';
 export * from './lib/storage.types';
 export * from './lib/user.types';
 export * from './lib/utils.types';

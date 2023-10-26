@@ -17,6 +17,7 @@ TypeScript/JavaScript-based applications.
 - **Storage**: This package is designed to optimize storing and retrieving procedures, enhancing data management within
   the 4thTech protocol system.
 - **Types**: This package contains the type declarations used across all the other packages.
+- **Utils**: This package provides utility functions and helpers that facilitate and enhance the functionality of the SDK.
 
 ## Usage
 

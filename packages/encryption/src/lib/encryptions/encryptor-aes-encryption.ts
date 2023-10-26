@@ -5,7 +5,7 @@ import {
   EncryptorService,
 } from '@4thtech-sdk/types';
 import { AesEncryption } from './aes-encryption';
-import { createHash } from 'crypto';
+import { createSha256Hash } from '@4thtech-sdk/utils';
 
 export class EncryptorAesEncryption implements Encryption {
   private readonly type = EncryptionType.ENCRYPTOR_AES;
@@ -98,16 +98,12 @@ export class EncryptorAesEncryption implements Encryption {
     }
 
     // Create an SHA-256 hash of shared secret key, so it will be the right length
-    const hashedSecret = this.createHash(sharedSecret);
+    const hashedSecret = await createSha256Hash(sharedSecret);
 
     // Cache the hashed shared secret
     await this.setCachedSharedSecret(publicKey, hashedSecret);
 
     return hashedSecret;
-  }
-
-  private createHash(data: string): string {
-    return createHash('sha256').update(data).digest('hex');
   }
 
   private async getCachedSharedSecret(

@@ -21,6 +21,7 @@ import {
 import { FeeCollectorContract } from './fee-collector-contract';
 import { AesEncryption, EncryptionHandler, EncryptorAesEncryption } from '@4thtech-sdk/encryption';
 import { validateChainContractExistence } from '../utils';
+import { arrayBufferToString, stringToArrayBuffer } from '@4thtech-sdk/utils';
 
 export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
   protected readonly encryptionHandler?: EncryptionHandler;
@@ -50,7 +51,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
     message: Message,
     encryption: Encryption,
   ): Promise<EncryptedMessage> {
-    const encryptedContent = await encryption.encrypt(Buffer.from(message.content));
+    const encryptedContent = await encryption.encrypt(stringToArrayBuffer(message.content));
 
     return {
       content: this.convertArrayBufferToBase64(encryptedContent),
@@ -80,7 +81,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
       encryptedMessage.metadata.encryption,
     );
 
-    return Buffer.from(decryptedMessage).toString();
+    return arrayBufferToString(decryptedMessage);
   }
 
   protected async generateSecretKey(): Promise<string> {
@@ -106,7 +107,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
       EncryptionType.ENCRYPTOR_AES,
     ) as EncryptorAesEncryption;
     await encryptorAesEncryption.initialize(user);
-    const secretKeyForUser = await encryptorAesEncryption.encrypt(Buffer.from(secretKey));
+    const secretKeyForUser = await encryptorAesEncryption.encrypt(stringToArrayBuffer(secretKey));
 
     return this.encodeMetaData<EncryptedSecretKeyData>({
       secretKey: this.convertArrayBufferToBase64(secretKeyForUser),
@@ -300,7 +301,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
 
     const encryptionSecretKey = await this.decryptSecretKey(encryptedSecretKeyDataOutput);
 
-    return Buffer.from(encryptionSecretKey).toString();
+    return arrayBufferToString(encryptionSecretKey);
   }
 
   private getReceiverFromConversation(conversation: Conversation, signerAddress: Address): Address {

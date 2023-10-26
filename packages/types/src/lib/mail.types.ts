@@ -48,7 +48,7 @@ export interface Mailable {
 
   getUserAppIds(user: Address): Promise<ReadonlyArray<AppId>>;
 
-  downloadAttachment(attachment: RemoteFileInfo): Promise<ArrayBufferLike>;
+  downloadAttachment(attachment: RemoteFileInfo): Promise<ArrayBuffer>;
 
   onNew(
     sender: Address | null,

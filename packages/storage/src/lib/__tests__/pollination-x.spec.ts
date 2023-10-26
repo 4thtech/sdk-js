@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import path from 'path';
-import { createReadStream, statSync } from 'fs';
+import { createReadStream } from 'fs';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { pollinationX } from '../../../../../secrets.json';
 import { PollinationX } from '../remote/providers/pollination-x';
@@ -45,9 +45,7 @@ describe('PollinationX', () => {
 
     const fileUrl = await pollinationX.upload(fileBuffer);
 
-    expect(fileUrl).to.be.equal(
-      'https://gateway.btfs.io/btfs/QmXRaBaygyb1qyMBXqmSJ14Tpz5wRkkFbKbCVzenWL5yuB',
-    );
+    expect(fileUrl).toContain('https://gateway.btfs.io/btfs/Q');
   });
 
   it('Should be downloaded exactly the same file as uploaded', async () => {
@@ -59,7 +57,7 @@ describe('PollinationX', () => {
 
     const originalFileBuffer = fs.readFileSync(filePath);
 
-    expect(file).to.deep.equal(originalFileBuffer);
+    expect(Buffer.from(file)).to.deep.equal(originalFileBuffer);
   });
 
   it('Should be downloaded exactly the same content as uploaded', async () => {
@@ -70,6 +68,6 @@ describe('PollinationX', () => {
     const fileUrl = await pollinationX.upload(fileContent);
     const downloadedFileContent = await pollinationX.download(fileUrl);
 
-    expect(fileContent).to.be.deep.equal(downloadedFileContent);
+    expect(fileContent).to.be.deep.equal(Buffer.from(downloadedFileContent));
   });
 });

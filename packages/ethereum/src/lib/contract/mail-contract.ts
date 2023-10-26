@@ -21,6 +21,7 @@ import { RemoteStorage } from '@4thtech-sdk/storage';
 import { MailConfig } from '../mail';
 import { FeeCollectorContract } from './fee-collector-contract';
 import { validateChainContractExistence } from '../utils';
+import { arrayBufferToString, stringToArrayBuffer } from '@4thtech-sdk/utils';
 
 export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
   protected remoteStorage: RemoteStorage;
@@ -144,7 +145,7 @@ export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
     const storedEnvelope = await this.remoteStorage.store(
       {
         name: 'envelope.json',
-        content: Buffer.from(JSON.stringify(options.envelope)),
+        content: stringToArrayBuffer(JSON.stringify(options.envelope)),
       },
       options.encryption,
       options.onUploadProgress,
@@ -202,7 +203,8 @@ export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
   private async retrieveEnvelope(remoteFileInfo: RemoteFileInfo): Promise<Envelope> {
     // TODO: handle error if it's not valid JSON
     // TODO: check checksum match; or check it in storage which would be better
-    return JSON.parse(Buffer.from(await this.remoteStorage.retrieve(remoteFileInfo)).toString());
+    const envelopeBuffer = await this.remoteStorage.retrieve(remoteFileInfo);
+    return JSON.parse(arrayBufferToString(envelopeBuffer));
   }
 
   private async getEnvelopeTransactionHash(

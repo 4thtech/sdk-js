@@ -7,12 +7,11 @@ import {
   RemoteFileInfo,
   RemoteFileMetaData,
 } from '@4thtech-sdk/types';
-import { createReadStream } from 'fs';
 import { RemoteStorageProvider } from './remote/remote-storage-provider';
 import path from 'path';
-import { createHash } from 'crypto';
 import { Readable, Transform } from 'stream';
 import { EncryptionHandler } from '@4thtech-sdk/encryption';
+import { calculateChecksum, calculateChecksumFromStream } from '@4thtech-sdk/utils';
 
 type RemoteStorageConfig = {
   storageProvider: RemoteStorageProvider;
@@ -57,12 +56,11 @@ export class RemoteStorage {
       .map((fileInfo) => (fileInfo as PromiseFulfilledResult<RemoteFileInfo>).value);
   }
 
-  public async retrieve(remoteFileInfo: RemoteFileInfo): Promise<ArrayBufferLike> {
+  public async retrieve(remoteFileInfo: RemoteFileInfo): Promise<ArrayBuffer> {
     // TODO: call proper storage provider based on URL
     // TODO: handle error if file doesn't exist
-    // TODO: check if checksum match
 
-    const { URL, checksum, metadata } = remoteFileInfo;
+    const { name, URL, checksum, metadata } = remoteFileInfo;
     const parsedMetadata = this.decodeMetaData(metadata);
 
     let fileContent = await this.storageProvider.download(URL);
@@ -113,8 +111,9 @@ export class RemoteStorage {
     fileName: string,
     encryption?: Encryption,
   ): Promise<[string, string]> {
-    const checksum = await this.calculateChecksumFromStream(filePath);
+    const checksum = await calculateChecksumFromStream(filePath);
 
+    const { createReadStream } = await import('fs');
     let stream: Readable = createReadStream(filePath);
 
     if (encryption) {
@@ -131,7 +130,7 @@ export class RemoteStorage {
       transform: async (chunk, encoding, callback) => {
         try {
           const encryptedChunk = await encryption.encrypt(chunk);
-          callback(null, encryptedChunk);
+          callback(null, Buffer.from(encryptedChunk));
         } catch (error) {
           callback(error as Error);
         }
@@ -147,23 +146,23 @@ export class RemoteStorage {
   }
 
   private async processBufferBasedFile(
-    fileContent: Buffer | ArrayBuffer | Blob,
+    fileContent: ArrayBuffer | Blob,
     fileName: string,
     encryption?: Encryption,
   ): Promise<[string, string]> {
     const contentBuffer = await this.toContentBuffer(fileContent);
 
-    const checksum = this.calculateChecksum(contentBuffer);
+    const checksum = await calculateChecksum(contentBuffer);
 
     if (encryption) {
       fileContent = await encryption.encrypt(contentBuffer);
+    }
 
-      // Encrypted content must be converted to Blob in browser env, otherwise content won't be stored correctly on server
-      if (typeof window !== 'undefined') {
-        fileContent = new Blob([fileContent], {
-          type: 'application/octet-stream',
-        });
-      }
+    // Content must be converted to Blob in browser env, otherwise content won't be stored correctly on server
+    if (typeof window !== 'undefined') {
+      fileContent = new Blob([fileContent], {
+        type: 'application/octet-stream',
+      });
     }
 
     const fileUrl = await this.storageProvider.upload(fileContent, fileName);
@@ -171,40 +170,16 @@ export class RemoteStorage {
     return [checksum, fileUrl];
   }
 
-  private async toContentBuffer(fileContent: Buffer | Blob | ArrayBuffer): Promise<ArrayBuffer> {
-    if (fileContent instanceof Buffer || fileContent instanceof ArrayBuffer) {
-      return fileContent;
+  private async toContentBuffer(fileContent: Blob | ArrayBuffer): Promise<ArrayBuffer> {
+    if (fileContent instanceof Blob) {
+      return await fileContent.arrayBuffer();
     }
-    return await fileContent.arrayBuffer();
+    return fileContent;
   }
 
   private getFileName(localFileInfo: LocalFileInfo): string {
     return isPathBasedFileInfo(localFileInfo)
       ? localFileInfo.name || path.basename(localFileInfo.path)
       : localFileInfo.name;
-  }
-
-  private calculateChecksum(data: ArrayBuffer): string {
-    return createHash('sha256').update(new Uint8Array(data)).digest('hex');
-  }
-
-  private async calculateChecksumFromStream(filePath: string): Promise<string> {
-    const readStream = createReadStream(filePath);
-
-    return new Promise((resolve, reject) => {
-      const hash = createHash('sha256');
-      readStream
-        .on('data', (chunk) => {
-          hash.update(chunk);
-        })
-        .on('error', (error) => {
-          readStream.close();
-          reject(error);
-        })
-        .on('end', () => {
-          readStream.close();
-          resolve(hash.digest('hex'));
-        });
-    });
   }
 }

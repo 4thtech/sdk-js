@@ -21,7 +21,8 @@
       "@4thtech-sdk/encryptor": ["packages/encryptor/src/index.ts"],
       "@4thtech-sdk/ethereum": ["packages/ethereum/src/index.ts"],
       "@4thtech-sdk/storage": ["packages/storage/src/index.ts"],
-      "@4thtech-sdk/types": ["packages/types/src/index.ts"]
+      "@4thtech-sdk/types": ["packages/types/src/index.ts"],
+      "@4thtech-sdk/utils": ["packages/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

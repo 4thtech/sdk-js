@@ -63,7 +63,7 @@ export class TestRemoteStorageProvider extends RemoteStorageProvider {
   }
 
   public async upload(file: FileInput, fileName: string): Promise<string> {
-    if (!(file instanceof Buffer || file instanceof Readable)) {
+    if (!(file instanceof Uint8Array || file instanceof ArrayBuffer || file instanceof Readable)) {
       throw new Error(
         'Only Buffer and Readable stream are supported in this test storage provider.',
       );
@@ -72,11 +72,11 @@ export class TestRemoteStorageProvider extends RemoteStorageProvider {
     return await this.saveFile(file, fileName);
   }
 
-  public async download(url: string): Promise<ArrayBufferLike> {
+  public async download(url: string): Promise<ArrayBuffer> {
     return await fs.promises.readFile(url);
   }
 
-  private async saveFile(file: Readable | Buffer, fileName: string): Promise<string> {
+  private async saveFile(file: Readable | ArrayBuffer, fileName: string): Promise<string> {
     this.emitUploadProgress(0, fileName);
 
     const randomFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.bin`;
@@ -86,7 +86,7 @@ export class TestRemoteStorageProvider extends RemoteStorageProvider {
     if (file instanceof Readable) {
       await pipeline(file, fs.createWriteStream(filePath));
     } else {
-      await fs.promises.writeFile(filePath, file);
+      await fs.promises.writeFile(filePath, new Uint8Array(file));
     }
 
     this.emitUploadProgress(100, fileName);
