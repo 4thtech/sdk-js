@@ -202,7 +202,6 @@ export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
 
   private async retrieveEnvelope(remoteFileInfo: RemoteFileInfo): Promise<Envelope> {
     // TODO: handle error if it's not valid JSON
-    // TODO: check checksum match; or check it in storage which would be better
     const envelopeBuffer = await this.remoteStorage.retrieve(remoteFileInfo);
     return JSON.parse(arrayBufferToString(envelopeBuffer));
   }

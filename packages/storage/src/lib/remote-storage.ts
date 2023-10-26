@@ -69,6 +69,17 @@ export class RemoteStorage {
       fileContent = await this.encryptionHandler.decrypt(fileContent, parsedMetadata.encryption);
     }
 
+    // Validate checksum
+    const fileContentChecksum = await calculateChecksum(fileContent);
+    const checksumMatch = fileContentChecksum === checksum;
+
+    if (!checksumMatch) {
+      throw new Error(
+        `Data integrity verification failed for file "${name}".
+        The content may have been tampered with or corrupted, and therefore won't be loaded.`,
+      );
+    }
+
     return fileContent;
   }
 
