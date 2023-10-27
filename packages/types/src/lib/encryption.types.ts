@@ -1,5 +1,5 @@
 export interface Encryption {
-  getType(): string;
+  readonly type: string;
   getMetadata(): EncryptionMetaData | Promise<EncryptionMetaData>;
   encrypt(data: ArrayBuffer): Promise<ArrayBuffer>;
   decrypt(data: ArrayBuffer, encryptionMetaData: EncryptionMetaData): Promise<ArrayBuffer>;

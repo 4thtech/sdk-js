@@ -8,9 +8,10 @@ import {
 } from '@4thtech-sdk/utils';
 
 export class AesEncryption implements Encryption {
+  public readonly type = EncryptionType.AES;
+
   private readonly name = 'AES-GCM';
   private readonly ivLength = 12;
-  private readonly type = EncryptionType.AES;
   private secretKey: CryptoKey | undefined;
 
   public static async fromSecretKey(secretKey: string): Promise<AesEncryption> {
@@ -19,13 +20,9 @@ export class AesEncryption implements Encryption {
     return aes;
   }
 
-  public getType(): string {
-    return this.type;
-  }
-
   public getMetadata(): EncryptionMetaData {
     return {
-      type: this.getType(),
+      type: this.type,
     };
   }
 

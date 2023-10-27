@@ -18,7 +18,7 @@ export class EncryptionHandler {
   }
 
   public addEncryptionInstance(encryptionInstance: Encryption): void {
-    const encryptionType = encryptionInstance.getType() as EncryptionType;
+    const encryptionType = encryptionInstance.type as EncryptionType;
     this.encryptionMap.set(encryptionType, encryptionInstance);
   }
 

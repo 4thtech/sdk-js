@@ -8,7 +8,7 @@ import { AesEncryption } from './aes-encryption';
 import { createSha256Hash } from '@4thtech-sdk/utils';
 
 export class EncryptorAesEncryption implements Encryption {
-  private readonly type = EncryptionType.ENCRYPTOR_AES;
+  public readonly type = EncryptionType.ENCRYPTOR_AES;
 
   private readonly aesEncryption = new AesEncryption();
 
@@ -30,10 +30,6 @@ export class EncryptorAesEncryption implements Encryption {
     await this.aesEncryption.importSecretKey(sharedSecret);
   }
 
-  public getType(): string {
-    return this.type;
-  }
-
   public async getMetadata(): Promise<EncryptionMetaData> {
     const senderPublicKey = await this.getEncryptorPublicKey();
 
@@ -42,7 +38,7 @@ export class EncryptorAesEncryption implements Encryption {
     }
 
     return {
-      type: this.getType(),
+      type: this.type,
       senderPublicKey,
       receiverPublicKey: this.receiverPublicKey,
     };
