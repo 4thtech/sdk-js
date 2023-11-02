@@ -7,9 +7,7 @@ const signer = new TestWalletClient();
 
 const encryptor = new Encryptor({
   encryptorExtension: new TestEncryptorExtension(),
-  userConfig: {
-    walletClient: signer,
-  },
+  walletClient: signer,
 });
 
 describe('Encryptor', () => {

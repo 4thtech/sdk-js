@@ -139,9 +139,7 @@ export async function prepareEncryptor(
 ): Promise<Encryptor> {
   const encryptor = new Encryptor({
     encryptorExtension: new TestEncryptorExtension(privateKeyId),
-    userConfig: {
-      walletClient,
-    },
+    walletClient,
   });
 
   const isAddressInitialized = await encryptor.isUserAddressInitialized(

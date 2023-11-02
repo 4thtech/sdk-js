@@ -4,13 +4,13 @@ import {
   EncryptorService,
   EncryptorState,
   EthereumTransactionResponse,
+  WalletClient,
 } from '@4thtech-sdk/types';
 import { User } from './user';
-import { UserConfig } from './user';
 
 export type EncryptorConfig = {
   encryptorExtension: EncryptorExtension;
-  userConfig: UserConfig;
+  walletClient: WalletClient;
 };
 
 export class Encryptor implements EncryptorService {
@@ -19,7 +19,9 @@ export class Encryptor implements EncryptorService {
 
   constructor(config: EncryptorConfig) {
     this.encryptorExtension = config.encryptorExtension;
-    this.user = new User(config.userConfig);
+    this.user = new User({
+      walletClient: config.walletClient,
+    });
   }
 
   public async isUserAddressInitialized(address: Address): Promise<boolean> {
