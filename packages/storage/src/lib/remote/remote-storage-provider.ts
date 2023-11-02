@@ -1,7 +1,7 @@
 import { FileInput, UploadProgressCallback } from '@4thtech-sdk/types';
 
 export abstract class RemoteStorageProvider {
-  public uploadProgressListener?: UploadProgressCallback;
+  private uploadProgressListener?: UploadProgressCallback;
 
   public abstract upload(file: FileInput, fileName?: string): Promise<string>;
 
