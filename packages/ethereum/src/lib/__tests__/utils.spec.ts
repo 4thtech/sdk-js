@@ -58,10 +58,6 @@ export class TestWalletClient extends TestEthersWalletClient {
 }
 
 export class TestRemoteStorageProvider extends RemoteStorageProvider {
-  constructor() {
-    super();
-  }
-
   public async upload(file: FileInput, fileName: string): Promise<string> {
     if (!(file instanceof Uint8Array || file instanceof ArrayBuffer || file instanceof Readable)) {
       throw new Error(
