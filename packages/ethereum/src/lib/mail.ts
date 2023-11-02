@@ -20,6 +20,14 @@ import { RemoteStorageProvider } from '@4thtech-sdk/storage';
 import { EncryptionHandler } from '@4thtech-sdk/encryption';
 import { WatchContractEventReturnType } from 'viem';
 
+/**
+ * Configuration for creating an instance of the Mail.
+ *
+ * @property {WalletClient} walletClient - The WalletClient instance.
+ * @property {RemoteStorageProvider} remoteStorageProvider - The remote storage provider instance.
+ * @property {AppId} appId - Optional application’s identifier.
+ * @property {EncryptionHandler} encryptionHandler - Optional EncryptionHandler instance used for decrypting mails.
+ */
 export type MailConfig = {
   walletClient: WalletClient;
   remoteStorageProvider: RemoteStorageProvider;
@@ -28,13 +36,15 @@ export type MailConfig = {
 };
 
 /**
- * Class that handles sending, retrieving and listening for events related to mail storage on-chain.
+ * Class that handles sending, retrieving and listening for events related to on-chain mail storage.
+ *
  * @extends MailContract
  * @implements Mailable
  */
 export class Mail extends MailContract implements Mailable {
   /**
    * Initialize a new mail client.
+   *
    * @param {MailConfig} config - The configuration for the mail client.
    */
   constructor(config: MailConfig) {
@@ -43,6 +53,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    * Send a new mail.
+   *
    * @param {MailSendOptions} options - Configuration for sending mail.
    * @param {Envelope} options.envelope - The mail envelope to send.
    * @param {Encryption} [options.encryption] - Optional encryption method.
@@ -73,6 +84,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    * Set opened time for a specific mail. This method can only perform a receiver of the mail.
+   *
    * @param {BigInt} mailIndex - The index of the mail to set opened time.
    * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
    */
@@ -85,6 +97,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Deletes a specific mail. This method can only perform a receiver of the mail.
+   *
    * @param {BigInt} mailIndex - The index of the mail to be deleted.
    * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
    */
@@ -97,6 +110,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Deletes multiple mails. This method can only perform a receiver of the mails.
+   *
    * @param {BigInt[]} mailIndexes - The indexes of mails to be deleted.
    * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
    */
@@ -109,6 +123,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Fetch a specific mail.
+   *
    * @param {Address} receiver - The mail receiver address.
    * @param {BigInt} mailIndex - The index of the mail.
    * @returns {Promise<ReceivedEnvelope>} The received mail Envelope.
@@ -125,6 +140,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Fetch all mails.
+   *
    * @param {Address} receiver - The mail receiver address.
    * @returns {Promise<ReceivedEnvelope[]>} Array of received mail Envelopes.
    */
@@ -140,6 +156,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Fetch mails paginated.
+   *
    * @param {Address} receiver - The mail receiver address.
    * @param {BigInt} pageNumber - The page number.
    * @param {BigInt} pageSize - The page size.
@@ -161,6 +178,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Fetches mail by transaction hash.
+   *
    * @param {TransactionHash} transactionHash - The transaction hash.
    * @returns {Promise<ReceivedEnvelope>} The received mail Envelope.
    */
@@ -170,6 +188,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Counts the number of mails of a receiver.
+   *
    * @param {Address} receiver - The mail receiver address.
    * @returns {Promise<BigInt>} Number of mails.
    */
@@ -183,6 +202,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Retrieves the user's App ID's.
+   *
    * @param {Address} user - The user address.
    * @returns {Promise<AppId[]>} Array of App ID's.
    */
@@ -196,6 +216,7 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Downloads an attachment of a mail.
+   *
    * @param {RemoteFileInfo} attachment - The attachment information.
    * @returns {Promise<ArrayBuffer>} Array buffer of the downloaded file.
    */
@@ -205,10 +226,11 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Listener for new mail event.
+   *
    * @param {Address | null } sender - The mail sender address.
    * @param {Address | null } receiver - The mail receiver address.
    * @param {Function} callback - The callback function.
-   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs.
    */
   public onNew(
     sender: Address | null,
@@ -231,10 +253,11 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Listener for opened mail event.
+   *
    * @param {Address | null } receiver - The mail receiver address.
    * @param {BigInt | null } index - The index of the mail.
    * @param {Function} callback - The callback function.
-   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs.
    */
   public onOpened(
     receiver: Address | null,
@@ -257,10 +280,11 @@ export class Mail extends MailContract implements Mailable {
 
   /**
    *  Listener for deleted mail event.
+   *
    * @param {Address | null } receiver - The mail receiver address.
    * @param {BigInt | null } index - The index of the mail.
    * @param {Function} callback - The callback function.
-   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs.
    */
   public onDeleted(
     receiver: Address | null,

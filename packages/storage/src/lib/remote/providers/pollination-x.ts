@@ -6,6 +6,9 @@ import stream from 'stream';
 import { FileInput } from '@4thtech-sdk/types';
 import { concatenateArrayBuffers } from '@4thtech-sdk/utils';
 
+/**
+ * Class representing a PollinationX provider for remote storage functionalities. It stores files on BitTorrent File System.
+ */
 export class PollinationX extends RemoteStorageProvider {
   private readonly client: AxiosInstance;
 
@@ -23,6 +26,13 @@ export class PollinationX extends RemoteStorageProvider {
     });
   }
 
+  /**
+   * Uploads a file to remote storage.
+   *
+   * @param {FileInput} file - The file input to be uploaded.
+   * @param {string} [fileName] - The optional file name.
+   * @returns {Promise<string>} Returns a promise resolving to the URL of the uploaded file.
+   */
   public async upload(file: FileInput, fileName?: string): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
@@ -46,6 +56,12 @@ export class PollinationX extends RemoteStorageProvider {
     return `https://gateway.btfs.io/btfs/${response.data.Hash}`;
   }
 
+  /**
+   * Downloads a file from a given URL.
+   *
+   * @param {string} url - The URL of the file to be downloaded.
+   * @returns {Promise<ArrayBuffer>} Returns a promise resolving to an ArrayBuffer of the downloaded file.
+   */
   public async download(url: string): Promise<ArrayBuffer> {
     const urlObj = new URL(url);
     const response = await this.client.post('get', null, {

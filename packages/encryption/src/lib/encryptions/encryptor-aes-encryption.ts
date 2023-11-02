@@ -7,7 +7,14 @@ import {
 import { AesEncryption } from './aes-encryption';
 import { createSha256Hash } from '@4thtech-sdk/utils';
 
+/**
+ * Represents an AES encryption approach utilizing the Encryptor extension to compute shared secrets.
+ * This allows data encryption between two parties.
+ *
+ * @implements {Encryption}
+ */
 export class EncryptorAesEncryption implements Encryption {
+  /** Type of encryption being used. */
   public readonly type = EncryptionType.ENCRYPTOR_AES;
 
   private readonly aesEncryption = new AesEncryption();
@@ -16,8 +23,19 @@ export class EncryptorAesEncryption implements Encryption {
 
   private receiverPublicKey?: string;
 
+  /**
+   * Creates a new EncryptorAesEncryption instance.
+   *
+   * @param {EncryptorService} encryptorService - Service to communicate with the Encryptor extension.
+   */
   constructor(private readonly encryptorService: EncryptorService) {}
 
+  /**
+   * Initializes the EncryptorAesEncryption instance by retrieving and caching the receiver's public key.
+   *
+   * @param {string} receiverAddress - The receiver's address.
+   * @throws Will throw an error if the receiver's public key cannot be retrieved.
+   */
   public async initialize(receiverAddress: string): Promise<void> {
     this.receiverPublicKey = await this.encryptorService.retrieveUserPublicKey(receiverAddress);
 
@@ -30,6 +48,12 @@ export class EncryptorAesEncryption implements Encryption {
     await this.aesEncryption.importSecretKey(sharedSecret);
   }
 
+  /**
+   * Retrieves the encryption metadata.
+   *
+   * @returns {Promise<EncryptionMetaData>} Encryption metadata including sender and receiver public keys.
+   * @throws Will throw an error if the receiver's public key wasn't set or if the sender's public key cannot be retrieved.
+   */
   public async getMetadata(): Promise<EncryptionMetaData> {
     const senderPublicKey = await this.getEncryptorPublicKey();
 
@@ -44,10 +68,24 @@ export class EncryptorAesEncryption implements Encryption {
     };
   }
 
+  /**
+   * Encrypts the provided data.
+   *
+   * @param {ArrayBuffer} data - The data to encrypt.
+   * @returns {Promise<ArrayBuffer>} Encrypted data.
+   */
   public async encrypt(data: ArrayBuffer): Promise<ArrayBuffer> {
     return this.aesEncryption.encrypt(data);
   }
 
+  /**
+   * Decrypts the provided data using the given encryption metadata.
+   *
+   * @param {ArrayBuffer} data - The encrypted data to decrypt.
+   * @param {EncryptionMetaData} encryptionMetaData - Metadata about the encryption used.
+   * @returns {Promise<ArrayBuffer>} Decrypted data.
+   * @throws Will throw an error if the encryption metadata is invalid or if shared secret key cannot be computed.
+   */
   public async decrypt(
     data: ArrayBuffer,
     encryptionMetaData: EncryptionMetaData,
@@ -70,6 +108,12 @@ export class EncryptorAesEncryption implements Encryption {
     return aesEncryption.decrypt(data);
   }
 
+  /**
+   * Retrieves the public key from the Encryptor extension.
+   *
+   * @returns {Promise<string>} The public key.
+   * @throws Will throw an error if the public key cannot be retrieved.
+   */
   private async getEncryptorPublicKey(): Promise<string> {
     const encryptorPublicKey = await this.encryptorService.getPublicKey();
 
@@ -80,6 +124,13 @@ export class EncryptorAesEncryption implements Encryption {
     return encryptorPublicKey;
   }
 
+  /**
+   * Computes a shared secret key with the provided public key.
+   *
+   * @param {string} publicKey - The public key of the other party.
+   * @returns {Promise<string>} Shared secret key.
+   * @throws Will throw an error if the shared secret key cannot be computed.
+   */
   private async getSharedSecret(publicKey: string): Promise<string> {
     // Attempt to get the cached shared secret
     const cachedSecret = await this.getCachedSharedSecret(publicKey);

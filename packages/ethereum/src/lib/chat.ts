@@ -23,11 +23,11 @@ import { Encryptor } from './encryptor';
 import { getAddress, keccak256, toBytes, WatchContractEventReturnType } from 'viem';
 
 /**
- * Configuration for the Chat class.
+ * Configuration for creating an instance of the Chat.
  *
- * @property {WalletClient} walletClient The WalletClient instance.
- * @property {string} appId The application’s identifier.
- * @property {Encryptor} encryptor Optional Encryptor service which is used for message encryption/decryption.
+ * @property {WalletClient} walletClient - The WalletClient instance.
+ * @property {AppId} appId - Optional application’s identifier.
+ * @property {Encryptor} encryptor - Optional Encryptor service which is used for message encryption/decryption.
  */
 export type ChatConfig = {
   walletClient: WalletClient;
@@ -36,7 +36,8 @@ export type ChatConfig = {
 };
 
 /**
- * Class that handles sending, retrieving and listening for events related to chat storage on-chain.
+ * Class that handles sending, retrieving and listening for events related to chat on-chain storage.
+ *
  * @extends ChatContract
  */
 export class Chat extends ChatContract {
@@ -47,15 +48,15 @@ export class Chat extends ChatContract {
   /**
    * Sends a message to a receiver.
    *
-   * @param {string} receiver The receiver of the message.
-   * @param {Message} message The message to be sent.
-   * @param {boolean} [encryptMessage=true] Whether the message should be encrypted before sending. Default is true.
+   * @param {string} receiver - The receiver of the message.
+   * @param {Message} message - The message to be sent.
+   * @param {boolean} [encryptMessage=true] - Whether the message should be encrypted before sending. Default is true.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async sendMessage(
     receiver: Address,
     message: Message,
-    encryptMessage = true,
+    encryptMessage: boolean = true,
   ): Promise<EthereumTransactionResponse> {
     let { content } = message;
     let metaData: MessageMetaData = {};
@@ -78,15 +79,15 @@ export class Chat extends ChatContract {
   /**
    * Adds a message to an existing conversation.
    *
-   * @param {string} conversationHash The target conversation's hash.
-   * @param {Message} message The message to be added to the conversation.
-   * @param {boolean} [encryptMessage=true] Whether the message should be encrypted before sending. Default is true.
+   * @param {string} conversationHash - The target conversation's hash.
+   * @param {Message} message - The message to be added to the conversation.
+   * @param {boolean} [encryptMessage=true] - Whether the message should be encrypted before sending. Default is true.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async addMessageToConversation(
     conversationHash: ConversationHash,
     message: Message,
-    encryptMessage = true,
+    encryptMessage: boolean = true,
   ): Promise<EthereumTransactionResponse> {
     let { content } = message;
     let metaData: MessageMetaData = {};
@@ -110,8 +111,8 @@ export class Chat extends ChatContract {
   /**
    * Deletes a message from a conversation.
    *
-   * @param {ConversationHash} conversationHash The target conversation's hash.
-   * @param {BigInt} index The index of the message to be deleted in the conversation.
+   * @param {ConversationHash} conversationHash - The target conversation's hash.
+   * @param {BigInt} index - The index of the message to be deleted in the conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async deleteMessage(
@@ -127,10 +128,10 @@ export class Chat extends ChatContract {
   /**
    * Creates a new group conversation.
    *
-   * @param {string} conversationName The name of the new group conversation.
-   * @param {boolean} isOnlyCreatorAllowedToAddMembers Specifies whether only the creator can add members to the group conversation.
-   * @param {boolean} isEncrypted Specifies whether the group conversation should be encrypted.
-   * @param {Address[]} members The initial members of the group conversation.
+   * @param {string} conversationName - The name of the new group conversation.
+   * @param {boolean} isOnlyCreatorAllowedToAddMembers - Specifies whether only the creator can add members to the group conversation.
+   * @param {boolean} isEncrypted - Specifies whether the group conversation should be encrypted.
+   * @param {Address[]} members - The initial members of the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async createGroupConversation(
@@ -167,7 +168,7 @@ export class Chat extends ChatContract {
   /**
    * Removes a conversation.
    *
-   * @param {ConversationHash} conversationHash The target conversation's hash.
+   * @param {ConversationHash} conversationHash - The target conversation's hash.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async removeConversation(
@@ -182,8 +183,8 @@ export class Chat extends ChatContract {
   /**
    * Adds members to a group conversation.
    *
-   * @param {ConversationHash} conversationHash The target group conversation's hash.
-   * @param {Address[]} members The members to be added to the group conversation.
+   * @param {ConversationHash} conversationHash - The target group conversation's hash.
+   * @param {Address[]} members - The members to be added to the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async addMembersToGroupConversation(
@@ -202,8 +203,8 @@ export class Chat extends ChatContract {
   /**
    * Removes a member from a group conversation.
    *
-   * @param {ConversationHash} conversationHash The target group conversation's hash.
-   * @param {Address} member The member to be removed from the group conversation.
+   * @param {ConversationHash} conversationHash - The target group conversation's hash.
+   * @param {Address} member - The member to be removed from the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async removeMemberFromGroupConversation(
@@ -219,8 +220,8 @@ export class Chat extends ChatContract {
   /**
    * Removes members from a group conversation.
    *
-   * @param {ConversationHash} conversationHash The target group conversation's hash.
-   * @param {Address[]} members The members to be removed from the group conversation.
+   * @param {ConversationHash} conversationHash - The target group conversation's hash.
+   * @param {Address[]} members - The members to be removed from the group conversation.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async removeMembersFromGroupConversation(
@@ -236,8 +237,8 @@ export class Chat extends ChatContract {
   /**
    * Calculates a conversation hash given two account addresses.
    *
-   * @param {Address} account1 The first account address.
-   * @param {Address} account2 The second account address.
+   * @param {Address} account1 - The first account address.
+   * @param {Address} account2 - The second account address.
    * @returns {ConversationHash} The calculated conversation hash.
    */
   public calculateConversationHash(account1: Address, account2: Address): ConversationHash {
@@ -255,7 +256,7 @@ export class Chat extends ChatContract {
   /**
    * Counts the number of messages in a conversation.
    *
-   * @param {ConversationHash} conversationHash The target conversation's hash.
+   * @param {ConversationHash} conversationHash - The target conversation's hash.
    * @returns {Promise<BigInt>} A promise that resolves to the number of messages in the conversation.
    */
   public async countMessages(conversationHash: ConversationHash): Promise<bigint> {
@@ -269,7 +270,7 @@ export class Chat extends ChatContract {
   /**
    * Fetches the conversation hashes related to an account.
    *
-   * @param {Address} account The target account.
+   * @param {Address} account - The target account.
    * @returns {Promise<ConversationHash[]>} A promise that resolves to an array of conversation hashes related to the account.
    */
   public async fetchConversationHashes(account: Address): Promise<readonly ConversationHash[]> {
@@ -283,7 +284,7 @@ export class Chat extends ChatContract {
   /**
    * Fetches a conversation given its hash.
    *
-   * @param {ConversationHash} conversationHash The target conversation's hash.
+   * @param {ConversationHash} conversationHash - The target conversation's hash.
    * @returns {Promise<Conversation>} A promise that resolves to the fetched conversation.
    */
   public async fetchConversation(conversationHash: ConversationHash): Promise<Conversation> {
@@ -300,7 +301,7 @@ export class Chat extends ChatContract {
   /**
    * Fetches all the conversations related to an account.
    *
-   * @param {Address} account The target account.
+   * @param {Address} account - The target account.
    * @returns {Promise<Conversation[]>} A promise that resolves to an array of conversations related to the account.
    */
   public async fetchConversations(account: Address): Promise<Conversation[]> {
@@ -317,9 +318,9 @@ export class Chat extends ChatContract {
   /**
    * Fetches the messages of a conversation in a paginated manner.
    *
-   * @param {ConversationHash} conversationHash The target conversation's hash.
-   * @param {BigInt} pageNumber The page number.
-   * @param {BigInt} pageSize The page size.
+   * @param {ConversationHash} conversationHash - The target conversation's hash.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
    * @returns {Promise<ReceivedMessage[]>} A promise that resolves to an array of messages of the conversation.
    */
   public async fetchConversationMessagesPaginated(
@@ -339,7 +340,7 @@ export class Chat extends ChatContract {
   /**
    * Fetches the app IDs a user is related to.
    *
-   * @param {Address} user The target user address.
+   * @param {Address} user - The target user address.
    * @returns {Promise<AppId[]>} A promise that resolves to an array of app IDs the user is related to.
    */
   public async getUserAppIds(user: Address): Promise<readonly AppId[]> {
@@ -353,10 +354,10 @@ export class Chat extends ChatContract {
   /**
    * Listener for when a message is sent.
    *
-   * @param {Address | null} sender The sender of the message.
-   * @param {ConversationHash | null} conversationHash The hash of the conversation where the message belongs to.
-   * @param {BigInt | null} index The index of the message in the conversation.
-   * @param {Function} callback The callback function that is invoked when a message is sent.
+   * @param {Address | null} sender - The sender of the message.
+   * @param {ConversationHash | null} conversationHash - The hash of the conversation where the message belongs to.
+   * @param {BigInt | null} index - The index of the message in the conversation.
+   * @param {Function} callback - The callback function that is invoked when a message is sent.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMessageSent(
@@ -383,15 +384,15 @@ export class Chat extends ChatContract {
   /**
    * Listener for when a message is deleted.
    *
-   * @param {ConversationHash | null} conversationHash The hash of the conversation where the message belongs to.
-   * @param {Address | null} sender The sender of the message.
-   * @param {BigInt | null} index The index of the message in the conversation.
-   * @param {Function} callback The callback function that is invoked when a message is deleted.
+   * @param {Address | null} sender - The sender of the message.
+   * @param {ConversationHash | null} conversationHash - The hash of the conversation where the message belongs to.
+   * @param {BigInt | null} index - The index of the message in the conversation.
+   * @param {Function} callback - The callback function that is invoked when a message is deleted.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMessageDeleted(
-    conversationHash: ConversationHash | null,
     sender: Address | null,
+    conversationHash: ConversationHash | null,
     index: bigint | null,
     callback: (conversationHash: ConversationHash, sender: Address, index: bigint) => void,
   ): WatchContractEventReturnType {
@@ -410,8 +411,8 @@ export class Chat extends ChatContract {
   /**
    * Listener for when a group conversation is created.
    *
-   * @param {Address | null} sender The sender of the group creation (group creator).
-   * @param {Function} callback The callback function that is invoked when a group conversation is created.
+   * @param {Address | null} sender - The sender of the group creation (group creator).
+   * @param {Function} callback - The callback function that is invoked when a group conversation is created.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onGroupConversationCreated(
@@ -443,9 +444,9 @@ export class Chat extends ChatContract {
   /**
    * Listener for when a conversation is removed.
    *
-   * @param {Address | null} sender The sender of the conversation deletion (conversation creator).
-   * @param {ConversationHash | null} conversationHash The hash of the conversation being removed.
-   * @param {Function} callback The callback function that is invoked when a conversation is removed.
+   * @param {Address | null} sender - The sender of the conversation deletion (conversation creator).
+   * @param {ConversationHash | null} conversationHash - The hash of the conversation being removed.
+   * @param {Function} callback - The callback function that is invoked when a conversation is removed.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onConversationRemoved(
@@ -468,10 +469,10 @@ export class Chat extends ChatContract {
   /**
    * Listener for when a member is added to a group conversation.
    *
-   * @param {AppId | null} appId The app ID of the chat.
-   * @param {ConversationHash | null} conversationHash The hash of the conversation to which a member is being added.
-   * @param {Address | null} member The member being added to the group conversation.
-   * @param {Function} callback The callback function that is invoked when a member is added to a group conversation.
+   * @param {AppId | null} appId - The app ID of the chat.
+   * @param {ConversationHash | null} conversationHash - The hash of the conversation to which a member is being added.
+   * @param {Address | null} member - The member being added to the group conversation.
+   * @param {Function} callback - The callback function that is invoked when a member is added to a group conversation.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMemberAddedToConversation(
@@ -495,10 +496,10 @@ export class Chat extends ChatContract {
   /**
    * Listener for when a member is removed from a group conversation.
    *
-   * @param {AppId | null} appId The app ID of the chat.
-   * @param {ConversationHash | null} conversationHash The hash of the conversation from which a member is being removed.
-   * @param {Address | null} member The member being removed from the group conversation.
-   * @param {Function} callback The callback function that is invoked when a member is removed from a group conversation.
+   * @param {AppId | null} appId - The app ID of the chat.
+   * @param {ConversationHash | null} conversationHash - The hash of the conversation from which a member is being removed.
+   * @param {Address | null} member - The member being removed from the group conversation.
+   * @param {Function} callback - The callback function that is invoked when a member is removed from a group conversation.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMemberRemovedFromConversation(

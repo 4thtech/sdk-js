@@ -2,17 +2,24 @@ import { UserContract } from './contract/user-contract';
 import { Address, EthereumTransactionResponse, UserStruct, WalletClient } from '@4thtech-sdk/types';
 import { WatchContractEventReturnType } from 'viem';
 
+/**
+ * Configuration for creating an instance of the User.
+ *
+ * @property {WalletClient} walletClient - The WalletClient instance.
+ */
 export type UserConfig = {
   walletClient: WalletClient;
 };
 
 /**
  * Class that handles storing, retrieving and listening for events related to user storage on-chain.
+ *
  * @extends UserContract
  */
 export class User extends UserContract {
   /**
    * Initialize a new user client.
+   *
    * @param {UserConfig} config - The configuration for the user client.
    */
   constructor(config: UserConfig) {
@@ -21,8 +28,9 @@ export class User extends UserContract {
 
   /**
    * Sets encryption public key.
-   * @param {string} publicKey The user's public key of an encryption method.
-   * @param {string} publicKeyType The public key type for an encryption method.
+   *
+   * @param {string} publicKey - The user's public key of an encryption method.
+   * @param {string} publicKeyType - The public key type for an encryption method.
    * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
    */
   public async setEncryptionPublicKey(
@@ -37,7 +45,8 @@ export class User extends UserContract {
 
   /**
    * Fetches a specific user.
-   * @param {Address} user The user address.
+   *
+   * @param {Address} user - The user address.
    * @returns {Promise<UserStruct>} A promise that resolves to user structure.
    */
   public async fetch(user: Address): Promise<UserStruct> {
@@ -50,9 +59,10 @@ export class User extends UserContract {
 
   /**
    * Listener for when encryption public key is set event.
-   * @param {Address | undefined} user The user address.
-   * @param {Function} callback A callback function.
-   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
+   *
+   * @param {Address | undefined} user - The user address.
+   * @param {Function} callback - A callback function.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs.
    */
   public onEncryptionPublicKeySet(
     user: Address | undefined,
