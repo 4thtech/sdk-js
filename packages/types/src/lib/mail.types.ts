@@ -12,10 +12,10 @@ export type Envelope = {
     attachments?: Attachment[];
   };
   receiver: Address;
-  sender: Address;
 };
 
 export type ReceivedEnvelope = Envelope & {
+  sender: Address;
   sentAt: Date;
   openedAt: Date | undefined;
   index: bigint;

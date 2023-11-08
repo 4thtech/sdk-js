@@ -62,7 +62,6 @@ describe('Mail', () => {
           ],
         },
         receiver: await receiver.getAddress(),
-        sender: await signer.getAddress(),
       };
     });
 
@@ -190,7 +189,6 @@ describe('Mail', () => {
             subject: 'Test setOpenedAt',
           },
           receiver: await receiver.getAddress(),
-          sender: await signer.getAddress(),
         },
       });
 
@@ -242,7 +240,6 @@ describe('Mail', () => {
         ],
       },
       receiver: receiverAddress,
-      sender: await signer.getAddress(),
     };
     let txResponse: EthereumTransactionResponse;
 
@@ -324,7 +321,6 @@ describe('Mail', () => {
           subject: 'Test subject',
         },
         receiver: receiverAddress,
-        sender: senderAddress,
       };
     });
 
