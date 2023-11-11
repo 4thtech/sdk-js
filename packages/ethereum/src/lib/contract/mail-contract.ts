@@ -72,6 +72,8 @@ export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
     const remoteEnvelope: RemoteFileInfo = {
       name: '',
       URL: envelopeUrl,
+      size: 1,
+      type: 'json',
       checksum: envelopeChecksum,
       metadata: metadata,
     };

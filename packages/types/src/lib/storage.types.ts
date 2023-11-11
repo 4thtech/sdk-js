@@ -22,6 +22,8 @@ export type RemoteFileMetaData = {
 export type RemoteFileInfo = {
   name: string;
   URL: string;
+  size: number;
+  type: string;
   checksum: string;
   metadata: string;
 };

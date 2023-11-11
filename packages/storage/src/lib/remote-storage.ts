@@ -100,7 +100,7 @@ export class RemoteStorage {
     encryption?: Encryption,
   ): Promise<RemoteFileInfo> {
     const fileName = this.getFileName(fileInfo);
-    const [checksum, fileUrl] = isPathBasedFileInfo(fileInfo)
+    const { checksum, fileUrl, fileSize } = isPathBasedFileInfo(fileInfo)
       ? await this.processPathBasedFile(fileInfo.path, fileName, encryption)
       : await this.processBufferBasedFile(fileInfo.content, fileName, encryption);
 
@@ -112,6 +112,8 @@ export class RemoteStorage {
     return {
       name: fileName,
       URL: fileUrl,
+      size: fileSize,
+      type: fileName.split('.').pop() || '',
       checksum,
       metadata: this.encodeMetaData(metadata),
     };
@@ -121,10 +123,12 @@ export class RemoteStorage {
     filePath: string,
     fileName: string,
     encryption?: Encryption,
-  ): Promise<[string, string]> {
+  ): Promise<{ checksum: string; fileUrl: string; fileSize: number }> {
     const checksum = await calculateChecksumFromStream(filePath);
 
-    const { createReadStream } = await import('fs');
+    const { createReadStream, promises } = await import('fs');
+    const stats = await promises.stat(filePath);
+
     let stream: Readable = createReadStream(filePath);
 
     if (encryption) {
@@ -133,7 +137,11 @@ export class RemoteStorage {
 
     const fileUrl = await this.storageProvider.upload(stream, fileName);
 
-    return [checksum, fileUrl];
+    return {
+      checksum,
+      fileUrl,
+      fileSize: stats.size,
+    };
   }
 
   private async encryptStream(readStream: Readable, encryption: Encryption): Promise<Readable> {
@@ -160,7 +168,7 @@ export class RemoteStorage {
     fileContent: ArrayBuffer | Blob,
     fileName: string,
     encryption?: Encryption,
-  ): Promise<[string, string]> {
+  ): Promise<{ checksum: string; fileUrl: string; fileSize: number }> {
     const contentBuffer = await this.toContentBuffer(fileContent);
 
     const checksum = await calculateChecksum(contentBuffer);
@@ -178,7 +186,11 @@ export class RemoteStorage {
 
     const fileUrl = await this.storageProvider.upload(fileContent, fileName);
 
-    return [checksum, fileUrl];
+    return {
+      checksum,
+      fileUrl,
+      fileSize: contentBuffer.byteLength,
+    };
   }
 
   private async toContentBuffer(fileContent: Blob | ArrayBuffer): Promise<ArrayBuffer> {
