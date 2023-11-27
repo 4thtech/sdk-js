@@ -184,6 +184,12 @@ export const oasisSapphireTestnet: Chain = defineChain({
       webSocket: ['wss://testnet.sapphire.oasis.dev/ws'],
     },
   },
+  blockExplorers: {
+    default: {
+      name: 'Sapphire Explorer',
+      url: 'https://testnet.explorer.sapphire.oasis.dev',
+    },
+  },
   contracts: {
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
