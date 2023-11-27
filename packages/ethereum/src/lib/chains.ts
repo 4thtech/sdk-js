@@ -168,3 +168,35 @@ export const immu3Testnet: Chain = defineChain({
   },
   testnet: true,
 });
+
+export const oasisSapphireTestnet: Chain = defineChain({
+  id: 23295,
+  name: 'Oasis Sapphire Testnet',
+  network: 'oasis-sapphire-testnet',
+  nativeCurrency: { name: 'TEST', symbol: 'TEST', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet.sapphire.oasis.dev'],
+      webSocket: ['wss://testnet.sapphire.oasis.dev/ws'],
+    },
+    public: {
+      http: ['https://testnet.sapphire.oasis.dev'],
+      webSocket: ['wss://testnet.sapphire.oasis.dev/ws'],
+    },
+  },
+  contracts: {
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    // chat: {
+    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+    // },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+  testnet: true,
+});
