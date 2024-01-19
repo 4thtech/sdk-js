@@ -8,12 +8,29 @@ import { EncryptorEventHandler } from './encryptor-event-handler';
  */
 export class EncryptorExtensionConnector implements EncryptorExtension {
   private readonly encryptorEventHandler: EncryptorEventHandler;
+  private isEncryptorInstalled: boolean = false;
+  private encryptorState: EncryptorState | undefined;
 
   /**
    * Initializes a new instance of the EncryptorExtensionConnector class.
    */
   constructor() {
-    this.encryptorEventHandler = new EncryptorEventHandler();
+    this.encryptorEventHandler = EncryptorEventHandler.getInstance();
+
+    // Listen for extension heartbeat event
+    this.encryptorEventHandler.onHeartbeat(() => {
+      this.isEncryptorInstalled = true;
+    });
+
+    // Listen for extension state change event
+    this.encryptorEventHandler.onStateChange((newState) => {
+      this.encryptorState = newState;
+    });
+
+    // Check if extension is installed - HTML tag exists
+    if (document.getElementById('block-labs-encryptor-extension')) {
+      this.isEncryptorInstalled = true;
+    }
   }
 
   /**
@@ -21,16 +38,22 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
    *
    * @returns {Promise<boolean>} Resolves to `true` if installed, otherwise `false`.
    */
-  public isInstalled(): Promise<boolean> {
+  public isInstalled(): Promise<boolean> | boolean {
+    if (this.isEncryptorInstalled) {
+      return this.isEncryptorInstalled;
+    }
+
     return new Promise((resolve) => {
       this.encryptorEventHandler.requestHandshake(() => {
+        this.isEncryptorInstalled = true;
         resolve(true);
       });
 
-      // Assume that Encryptor is not installed if there is no handshake inside 2s
+      // Assume that Encryptor is not installed if there is no handshake inside 10s
       setTimeout(() => {
+        this.isEncryptorInstalled = false;
         resolve(false);
-      }, 2000);
+      }, 10_000);
     });
   }
 
@@ -66,9 +89,14 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
    *
    * @returns {Promise<EncryptorState>} Resolves to the current state of the extension.
    */
-  public getState(): Promise<EncryptorState> {
+  public getState(): Promise<EncryptorState> | EncryptorState {
+    if (this.encryptorState) {
+      return this.encryptorState;
+    }
+
     return new Promise((resolve) => {
       this.encryptorEventHandler.getState((res) => {
+        this.encryptorState = res.state;
         resolve(res.state);
       });
     });
