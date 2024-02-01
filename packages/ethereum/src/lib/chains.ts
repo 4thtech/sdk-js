@@ -5,6 +5,7 @@ import {
   metisGoerli as viemMetisGoerli,
   polygonMumbai as viemPolygonMumbai,
   sepolia as viemSepolia,
+  zetachainAthensTestnet as viemZetachainAthensTestnet,
 } from 'viem/chains';
 import { Chain } from '@4thtech-sdk/types';
 
@@ -206,3 +207,21 @@ export const oasisSapphireTestnet: Chain = defineChain({
   },
   testnet: true,
 });
+
+export const zetachainAthensTestnet: Chain = {
+  ...viemZetachainAthensTestnet,
+  contracts: {
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    // chat: {
+    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+    // },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+};
