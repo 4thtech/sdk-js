@@ -92,16 +92,16 @@ export const artheraTestnet: Chain = defineChain({
   nativeCurrency: { name: 'Arthera', symbol: 'AA', decimals: 18 },
   rpcUrls: {
     default: {
-      http: ['https://rpc-test.arthera.net'],
+      http: ['https://rpc-test2.arthera.net'],
     },
     public: {
-      http: ['https://rpc-test.arthera.net'],
+      http: ['https://rpc-test2.arthera.net'],
     },
   },
   blockExplorers: {
     default: {
       name: 'Arthera Explorer',
-      url: 'https://explorer-test.arthera.net',
+      url: 'https://explorer-test2.arthera.net',
     },
   },
   contracts: {
