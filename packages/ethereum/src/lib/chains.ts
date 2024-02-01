@@ -210,6 +210,12 @@ export const oasisSapphireTestnet: Chain = defineChain({
 
 export const zetachainAthensTestnet: Chain = {
   ...viemZetachainAthensTestnet,
+  blockExplorers: {
+    default: {
+      name: 'ZetaScan',
+      url: 'https://athens.explorer.zetachain.com',
+    },
+  },
   contracts: {
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
