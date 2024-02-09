@@ -1,6 +1,8 @@
 import { defineChain } from 'viem';
 import {
   edgewareTestnet as viemEdgewareTestnet,
+  fantomTestnet as viemFantomTestnet,
+  gnosisChiado as viemGnosisChiado,
   hardhat as viemHardhat,
   metisGoerli as viemMetisGoerli,
   polygonMumbai as viemPolygonMumbai,
@@ -216,6 +218,79 @@ export const zetachainAthensTestnet: Chain = {
       url: 'https://athens.explorer.zetachain.com',
     },
   },
+  contracts: {
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    // chat: {
+    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+    // },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+};
+
+export const mantleSepoliaTestnet: Chain = defineChain({
+  id: 5003,
+  name: 'Mantle Sepolia Testnet',
+  network: 'mantle-sepolia-testnet',
+  nativeCurrency: { name: 'MNT', symbol: 'MNT', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.sepolia.mantle.xyz'],
+    },
+    public: {
+      http: ['https://rpc.sepolia.mantle.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Mantle Sepolia Explorer',
+      url: 'https://explorer.sepolia.mantle.xyz',
+    },
+  },
+  contracts: {
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    // chat: {
+    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+    // },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+  testnet: true,
+});
+
+export const fantomTestnet: Chain = {
+  ...viemFantomTestnet,
+  contracts: {
+    ...viemFantomTestnet.contracts,
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    // chat: {
+    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+    // },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+};
+
+export const gnosisChiado: Chain = {
+  ...viemGnosisChiado,
   contracts: {
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
