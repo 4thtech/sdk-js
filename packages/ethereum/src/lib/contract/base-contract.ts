@@ -31,7 +31,9 @@ export class BaseContract<TAbi extends ContractAbi> {
 
     this.publicClient = createPublicClient({
       chain: walletClient.chain,
-      transport: http(),
+      transport: http(undefined, {
+        batch: true,
+      }),
     });
     this.walletClient = walletClient;
     this.contractConfig = contractConfig as typeof contractConfig;
