@@ -123,10 +123,26 @@ export const artheraTestnet: Chain = defineChain({
   testnet: true,
 });
 
-export const metisGoerli: Chain = {
-  ...viemMetisGoerli,
+export const metisSepolia: Chain = defineChain({
+  id: 59901,
+  name: 'Metis Sepolia',
+  network: 'metis-sepolia',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Metis Sepolia',
+    symbol: 'tMETIS',
+  },
+  rpcUrls: {
+    default: { http: ['https://sepolia.rpc.metisdevops.link'] },
+    public: { http: ['https://sepolia.rpc.metisdevops.link'] },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Metis Sepolia Explorer',
+      url: 'https://sepolia.explorer.metisdevops.link',
+    },
+  },
   contracts: {
-    ...viemMetisGoerli.contracts,
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
@@ -140,7 +156,7 @@ export const metisGoerli: Chain = {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
-};
+});
 
 export const immu3Testnet: Chain = defineChain({
   id: 3100,
