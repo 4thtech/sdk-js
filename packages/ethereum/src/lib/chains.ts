@@ -4,7 +4,6 @@ import {
   fantomTestnet as viemFantomTestnet,
   gnosisChiado as viemGnosisChiado,
   hardhat as viemHardhat,
-  metisGoerli as viemMetisGoerli,
   polygonMumbai as viemPolygonMumbai,
   sepolia as viemSepolia,
   zetachainAthensTestnet as viemZetachainAthensTestnet,
