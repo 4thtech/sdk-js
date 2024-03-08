@@ -467,28 +467,26 @@ export class Chat extends ChatContract {
   }
 
   /**
-   * Listener for when a member is added to a group conversation.
+   * Listener for when a member is added to a conversation.
    *
-   * @param {AppId | null} appId - The app ID of the chat.
    * @param {ConversationHash | null} conversationHash - The hash of the conversation to which a member is being added.
    * @param {Address | null} member - The member being added to the group conversation.
    * @param {Function} callback - The callback function that is invoked when a member is added to a group conversation.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMemberAddedToConversation(
-    appId: AppId | null,
     conversationHash: ConversationHash | null,
     member: Address | null,
-    callback: (appId: AppId, conversationHash: ConversationHash, member: Address) => void,
+    callback: (conversationHash: ConversationHash, member: Address) => void,
   ): WatchContractEventReturnType {
     return this.publicClient.watchContractEvent({
       ...this.contractConfig,
       eventName: 'MemberAddedToConversation',
-      args: { appId, conversationHash, member },
+      args: { appId: this.appId, conversationHash, member },
       onLogs: (logs) =>
         logs.forEach(async ({ args }) => {
           const eventOutput = args as MemberAddedToConversationEventOutput;
-          callback(eventOutput.appId, eventOutput.conversationHash, eventOutput.member);
+          callback(eventOutput.conversationHash, eventOutput.member);
         }),
     });
   }
@@ -496,26 +494,24 @@ export class Chat extends ChatContract {
   /**
    * Listener for when a member is removed from a group conversation.
    *
-   * @param {AppId | null} appId - The app ID of the chat.
    * @param {ConversationHash | null} conversationHash - The hash of the conversation from which a member is being removed.
    * @param {Address | null} member - The member being removed from the group conversation.
    * @param {Function} callback - The callback function that is invoked when a member is removed from a group conversation.
    * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs
    */
   public onMemberRemovedFromConversation(
-    appId: AppId | null,
     conversationHash: ConversationHash | null,
     member: Address | null,
-    callback: (appId: AppId, conversationHash: ConversationHash, member: Address) => void,
+    callback: (conversationHash: ConversationHash, member: Address) => void,
   ): WatchContractEventReturnType {
     return this.publicClient.watchContractEvent({
       ...this.contractConfig,
       eventName: 'MemberRemovedFromConversation',
-      args: { appId, conversationHash, member },
+      args: { appId: this.appId, conversationHash, member },
       onLogs: (logs) =>
         logs.forEach(async ({ args }) => {
           const eventOutput = args as MemberRemovedFromConversationEventOutput;
-          callback(eventOutput.appId, eventOutput.conversationHash, eventOutput.member);
+          callback(eventOutput.conversationHash, eventOutput.member);
         }),
     });
   }
