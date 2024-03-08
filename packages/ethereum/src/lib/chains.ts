@@ -41,7 +41,7 @@ export const sepolia: Chain = {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
-      address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
     },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
@@ -60,7 +60,7 @@ export const polygonMumbai: Chain = {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
-      address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
     },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
@@ -78,7 +78,7 @@ export const edgewareTestnet: Chain = {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
-      address: '0x049550472718a999aF1c4B7fCc7B8A7692F45c93',
+      address: '0xf32aFB10a3948B0D3Df65fEf5dd8004ea542BFAa',
     },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
@@ -113,7 +113,7 @@ export const artheraTestnet: Chain = defineChain({
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
     chat: {
-      address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
     },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
@@ -148,9 +148,9 @@ export const metisSepolia: Chain = defineChain({
     mail: {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
-    // chat: {
-    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
-    // },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
@@ -177,9 +177,9 @@ export const immu3Testnet: Chain = defineChain({
     mail: {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
-    // chat: {
-    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
-    // },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
@@ -215,9 +215,9 @@ export const oasisSapphireTestnet: Chain = defineChain({
     mail: {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
-    // chat: {
-    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
-    // },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
@@ -240,9 +240,9 @@ export const zetachainAthensTestnet: Chain = {
     mail: {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
-    // chat: {
-    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
-    // },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
@@ -275,9 +275,9 @@ export const mantleSepoliaTestnet: Chain = defineChain({
     mail: {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
-    // chat: {
-    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
-    // },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
@@ -295,9 +295,9 @@ export const fantomTestnet: Chain = {
     mail: {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
-    // chat: {
-    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
-    // },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
@@ -313,9 +313,9 @@ export const gnosisChiado: Chain = {
     mail: {
       address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
     },
-    // chat: {
-    //   address: '0xDc0C586ad11dB0b396031F50687e278Bd77508dC',
-    // },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
     user: {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
