@@ -71,7 +71,7 @@ export class Chat extends ChatContract {
 
     return this.sendContractTransaction({
       functionName: 'sendMessage',
-      args: [this.appId, receiver, content, this.encodeMetaData<MessageMetaData>(metaData)],
+      args: [this.appId, receiver, encryptMessage, content, this.encodeMetaData<MessageMetaData>(metaData)],
       fee: await this.getAppRequiredFee(),
     });
   }

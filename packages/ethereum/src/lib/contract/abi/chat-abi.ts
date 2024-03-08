@@ -903,6 +903,11 @@ export const chatAbi = [
         type: 'address',
       },
       {
+        internalType: 'bool',
+        name: 'isEncrypted',
+        type: 'bool',
+      },
+      {
         internalType: 'string',
         name: 'content',
         type: 'string',
