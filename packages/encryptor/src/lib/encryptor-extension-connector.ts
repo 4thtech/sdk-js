@@ -49,11 +49,11 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
         resolve(true);
       });
 
-      // Assume that Encryptor is not installed if there is no handshake inside 10s
+      // Assume that Encryptor is not installed if there is no handshake inside 1s
       setTimeout(() => {
         this.isEncryptorInstalled = false;
         resolve(false);
-      }, 10_000);
+      }, 1_000);
     });
   }
 
