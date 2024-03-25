@@ -191,8 +191,13 @@ export class Chat extends ChatContract {
     conversationHash: ConversationHash,
     members: Address[],
   ): Promise<EthereumTransactionResponse> {
-    // TODO: retrieve conversation secret key and encrypt it for each member
-    const membersEncryptedSecretKeys: string[] = [];
+    let membersEncryptedSecretKeys: string[] = [];
+
+    const conversation = await this.fetchConversation(conversationHash);
+    if (conversation.isEncrypted) {
+      const secretKey = await this.getEncryptionSecretKeyForGroupConversation(conversationHash);
+      membersEncryptedSecretKeys = await this.encryptSecretKeyForMembers(secretKey, members);
+    }
 
     return this.sendContractTransaction({
       functionName: 'addMembersToGroupConversation',

@@ -286,7 +286,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
     }
   }
 
-  private async getEncryptionSecretKeyForGroupConversation(
+  protected async getEncryptionSecretKeyForGroupConversation(
     conversationHash: ConversationHash,
   ): Promise<string> {
     const signerAddress = await this.getSignerAddress();

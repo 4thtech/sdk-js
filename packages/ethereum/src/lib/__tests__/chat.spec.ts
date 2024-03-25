@@ -233,6 +233,19 @@ describe('Chat', () => {
             chat.addMessageToConversation(lastConversation.hash, message),
           );
         });
+
+        it('Should add members to group conversation', async () => {
+          await prepareEncryptor(member1, 2);
+          await prepareEncryptor(member2, 3);
+
+          await chat.addMembersToGroupConversation(lastConversation.hash, [
+            await member1.getAddress(),
+            await member2.getAddress(),
+          ]);
+          const conversation = await chat.fetchConversation(lastConversation.hash);
+
+          expect(conversation.members.length).to.be.equal(4);
+        });
       });
     });
   });
