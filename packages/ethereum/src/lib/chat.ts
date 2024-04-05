@@ -50,13 +50,13 @@ export class Chat extends ChatContract {
    *
    * @param {string} receiver - The receiver of the message.
    * @param {Message} message - The message to be sent.
-   * @param {boolean} [encryptMessage=true] - Whether the message should be encrypted before sending. Default is true.
+   * @param [encryptMessage=true] - Whether the message should be encrypted before sending.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async sendMessage(
     receiver: Address,
     message: Message,
-    encryptMessage: boolean = true,
+    encryptMessage = true,
   ): Promise<EthereumTransactionResponse> {
     let { content } = message;
     let metaData: MessageMetaData = {};
@@ -71,7 +71,13 @@ export class Chat extends ChatContract {
 
     return this.sendContractTransaction({
       functionName: 'sendMessage',
-      args: [this.appId, receiver, encryptMessage, content, this.encodeMetaData<MessageMetaData>(metaData)],
+      args: [
+        this.appId,
+        receiver,
+        encryptMessage,
+        content,
+        this.encodeMetaData<MessageMetaData>(metaData),
+      ],
       fee: await this.getAppRequiredFee(),
     });
   }
@@ -81,13 +87,13 @@ export class Chat extends ChatContract {
    *
    * @param {string} conversationHash - The target conversation's hash.
    * @param {Message} message - The message to be added to the conversation.
-   * @param {boolean} [encryptMessage=true] - Whether the message should be encrypted before sending. Default is true.
+   * @param [encryptMessage=true] - Whether the message should be encrypted before sending.
    * @returns {Promise<EthereumTransactionResponse>} A promise that represents the Ethereum transaction response.
    */
   public async addMessageToConversation(
     conversationHash: ConversationHash,
     message: Message,
-    encryptMessage: boolean = true,
+    encryptMessage = true,
   ): Promise<EthereumTransactionResponse> {
     let { content } = message;
     let metaData: MessageMetaData = {};
