@@ -1,7 +1,7 @@
 import { defineChain } from 'viem';
 import {
   edgewareTestnet as viemEdgewareTestnet,
-  fantomTestnet as viemFantomTestnet,
+  fantomSonicTestnet as viemFantomSonicTestnet,
   gnosisChiado as viemGnosisChiado,
   hardhat as viemHardhat,
   polygonMumbai as viemPolygonMumbai,
@@ -285,10 +285,9 @@ export const mantleSepoliaTestnet: Chain = defineChain({
   testnet: true,
 });
 
-export const fantomTestnet: Chain = {
-  ...viemFantomTestnet,
+export const fantomSonicTestnet: Chain = {
+  ...viemFantomSonicTestnet,
   contracts: {
-    ...viemFantomTestnet.contracts,
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
     },
