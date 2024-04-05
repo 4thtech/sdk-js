@@ -50,6 +50,8 @@ describe('Mail', () => {
             {
               name: 'test-attachment-2.txt',
               URL: 'https://www.example.com/test-attachment-2.txt',
+              size: 1,
+              type: 'txt',
               checksum: '0fd2d4e630b6579b933b5cb4930a8100acca6b4e29cd2738c4b7a9b2f76d80e4',
               metadata: '{}',
             },

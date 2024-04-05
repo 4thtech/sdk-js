@@ -91,6 +91,8 @@ describe('Storage', () => {
         storage.retrieve({
           name: 'nonExistentFile',
           URL: 'https://invalidurl.com/nonExistentFile',
+          size: 1,
+          type: '',
           checksum: '',
           metadata: '{}',
         }),
