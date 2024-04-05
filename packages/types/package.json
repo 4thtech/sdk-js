@@ -3,6 +3,6 @@
   "version": "0.3.2",
   "type": "commonjs",
   "dependencies": {
-    "viem": "^1.16.6"
+    "viem": "^2.9.9"
   }
 }
