@@ -1,8 +1,5 @@
 {
   "name": "@4thtech-sdk/types",
-  "version": "0.3.2",
-  "type": "commonjs",
-  "dependencies": {
-    "viem": "^2.9.9"
-  }
+  "version": "0.3.3",
+  "type": "commonjs"
 }
