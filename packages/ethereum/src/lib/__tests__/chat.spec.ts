@@ -348,8 +348,7 @@ describe('Chat', () => {
     });
 
     it('Should emit event on member added to conversation', async () => {
-      chat.onMemberAddedToConversation(null, null, null, (appId, conversationHash, member) => {
-        console.log(appId);
+      chat.onMemberAddedToConversation(null, null, (conversationHash, member) => {
         console.log(conversationHash);
         console.log(member);
       });
@@ -369,8 +368,7 @@ describe('Chat', () => {
     });
 
     it('Should emit event on member removed from conversation', async () => {
-      chat.onMemberRemovedFromConversation(null, null, null, (appId, conversationHash, member) => {
-        console.log(appId);
+      chat.onMemberRemovedFromConversation(null, null, (conversationHash, member) => {
         console.log(conversationHash);
         console.log(member);
       });
