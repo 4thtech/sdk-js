@@ -94,7 +94,7 @@ export class EncryptorEventHandler {
   private setupEventListener(): void {
     window.addEventListener('message', this.handleMessageEvent.bind(this), false);
 
-    document.addEventListener(EventName.BLOCK_LABS_ENCRYPTOR_HEARTBEAT, (e) => {
+    document.addEventListener(EventName.BLOCK_LABS_ENCRYPTOR_HEARTBEAT, () => {
       this.onHeartbeatCallback?.();
     });
 
