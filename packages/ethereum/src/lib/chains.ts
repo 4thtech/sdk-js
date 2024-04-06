@@ -1,7 +1,6 @@
 import { defineChain } from 'viem';
 import {
   edgewareTestnet as viemEdgewareTestnet,
-  fantomSonicTestnet as viemFantomSonicTestnet,
   gnosisChiado as viemGnosisChiado,
   hardhat as viemHardhat,
   polygonMumbai as viemPolygonMumbai,
@@ -285,8 +284,24 @@ export const mantleSepoliaTestnet: Chain = defineChain({
   testnet: true,
 });
 
-export const fantomSonicTestnet: Chain = {
-  ...viemFantomSonicTestnet,
+export const fantomSonicTestnet: Chain = defineChain({
+  id: 64_165,
+  name: 'Fantom Sonic Builders Testnet',
+  network: 'fantom-sonic-testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Fantom',
+    symbol: 'FTM',
+  },
+  rpcUrls: {
+    default: { http: ['https://rpc.sonic.fantom.network'] },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Fantom Sonic Open Testnet Explorer',
+      url: 'https://public-sonic.fantom.network',
+    },
+  },
   contracts: {
     appFeeManager: {
       address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
@@ -301,7 +316,8 @@ export const fantomSonicTestnet: Chain = {
       address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
     },
   },
-};
+  testnet: true,
+});
 
 export const gnosisChiado: Chain = {
   ...viemGnosisChiado,
