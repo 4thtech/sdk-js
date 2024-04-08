@@ -313,7 +313,12 @@ export const fantomSonicTestnet: Chain = defineChain({
     symbol: 'FTM',
   },
   rpcUrls: {
-    default: { http: ['https://rpc.sonic.fantom.network'] },
+    default: {
+      http: ['https://rpc.sonic.fantom.network'],
+    },
+    public: {
+      http: ['https://rpc.sonic.fantom.network'],
+    },
   },
   blockExplorers: {
     default: {
