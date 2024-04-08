@@ -1,6 +1,7 @@
 import { defineChain } from 'viem';
 import {
   edgewareTestnet as viemEdgewareTestnet,
+  fantomTestnet as viemFantomTestnet,
   gnosisChiado as viemGnosisChiado,
   hardhat as viemHardhat,
   polygonMumbai as viemPolygonMumbai,
@@ -283,6 +284,24 @@ export const mantleSepoliaTestnet: Chain = defineChain({
   },
   testnet: true,
 });
+
+export const fantomTestnet: Chain = {
+  ...viemFantomTestnet,
+  contracts: {
+    appFeeManager: {
+      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+    },
+    mail: {
+      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+    },
+    chat: {
+      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+    },
+    user: {
+      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+    },
+  },
+};
 
 export const fantomSonicTestnet: Chain = defineChain({
   id: 64_165,
