@@ -78,9 +78,9 @@ export class Encryptor implements EncryptorService {
   /**
    * Retrieves the state of the Encryptor extension.
    *
-   * @returns {Promise<EncryptorState>} - The current state of the Encryptor extension.
+   * @returns {Promise<EncryptorState | undefined>} - The current state of the Encryptor extension.
    */
-  public getState(): Promise<EncryptorState> {
+  public getState(): Promise<EncryptorState | undefined> {
     const state = this.encryptorExtension.getState();
     return Promise.resolve(state);
   }

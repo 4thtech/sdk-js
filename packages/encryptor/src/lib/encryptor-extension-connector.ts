@@ -26,11 +26,6 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
     this.encryptorEventHandler.onStateChange((newState) => {
       this.encryptorState = newState;
     });
-
-    // Check if extension is installed - HTML tag exists
-    if (document.getElementById('block-labs-encryptor-extension')) {
-      this.isEncryptorInstalled = true;
-    }
   }
 
   /**
@@ -38,23 +33,15 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
    *
    * @returns {Promise<boolean>} Resolves to `true` if installed, otherwise `false`.
    */
-  public isInstalled(): Promise<boolean> | boolean {
+  public async isInstalled(): Promise<boolean> {
     if (this.isEncryptorInstalled) {
       return this.isEncryptorInstalled;
     }
 
-    return new Promise((resolve) => {
-      this.encryptorEventHandler.requestHandshake(() => {
-        this.isEncryptorInstalled = true;
-        resolve(true);
-      });
+    const appVersion = await this.encryptorEventHandler.getAppVersion();
+    this.isEncryptorInstalled = !!appVersion;
 
-      // Assume that Encryptor is not installed if there is no handshake inside 1s
-      setTimeout(() => {
-        this.isEncryptorInstalled = false;
-        resolve(false);
-      }, 1_000);
-    });
+    return this.isEncryptorInstalled;
   }
 
   /**
@@ -87,19 +74,16 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
   /**
    * Retrieves the current state of the Encryptor Extension.
    *
-   * @returns {Promise<EncryptorState>} Resolves to the current state of the extension.
+   * @returns {Promise<EncryptorState | undefined>} Resolves to the current state of the extension.
    */
-  public getState(): Promise<EncryptorState> | EncryptorState {
+  public async getState(): Promise<EncryptorState | undefined> {
     if (this.encryptorState) {
       return this.encryptorState;
     }
 
-    return new Promise((resolve) => {
-      this.encryptorEventHandler.getState((res) => {
-        this.encryptorState = res.state;
-        resolve(res.state);
-      });
-    });
+    this.encryptorState = await this.encryptorEventHandler.getState();
+
+    return this.encryptorState;
   }
 
   /**
@@ -108,11 +92,7 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
    * @returns {Promise<string | undefined>} Resolves to the public key or undefined if not available.
    */
   public getPublicKey(): Promise<string | undefined> {
-    return new Promise((resolve) => {
-      this.encryptorEventHandler.getPublicKey((res) => {
-        resolve(res?.publicKey);
-      });
-    });
+    return this.encryptorEventHandler.getPublicKey();
   }
 
   /**
@@ -134,10 +114,6 @@ export class EncryptorExtensionConnector implements EncryptorExtension {
    * @returns {Promise<string | undefined>} Resolves to the shared secret key or undefined if not available.
    */
   public computeSharedSecretKey(publicKey: string): Promise<string | undefined> {
-    return new Promise((resolve) => {
-      this.encryptorEventHandler.computeSharedSecretKey(publicKey, (res) => {
-        resolve(res?.sharedSecret);
-      });
-    });
+    return this.encryptorEventHandler.computeSharedSecretKey(publicKey);
   }
 }

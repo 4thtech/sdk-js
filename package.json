@@ -15,6 +15,7 @@
     "@nrwl/linter": "17.0.0",
     "@nrwl/vite": "17.0.0",
     "@nrwl/workspace": "17.0.0",
+    "@types/chrome": "^0.0.266",
     "@types/node": "^20.12.4",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
     "@typescript-eslint/parser": "^7.5.0",

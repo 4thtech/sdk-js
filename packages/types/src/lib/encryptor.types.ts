@@ -6,22 +6,21 @@ export enum EncryptorState {
   UNLOCKED = 'unlocked',
 }
 
-type ResponseObject = {
+export type ResponseData = {
+  version?: string;
   publicKey?: string;
   sharedSecret?: string;
-  state: EncryptorState;
+  state?: EncryptorState;
 };
 
-export type EncryptorExtensionCallback = (response: ResponseObject) => void;
-
 export interface EncryptorExtension {
-  getState(): Promise<EncryptorState> | EncryptorState;
+  getState(): Promise<EncryptorState | undefined>;
 
-  getPublicKey(): Promise<string | undefined> | string;
+  getPublicKey(): Promise<string | undefined>;
 
   getPublicKeyType(): string;
 
-  computeSharedSecretKey(publicKey: string): Promise<string | undefined> | string;
+  computeSharedSecretKey(publicKey: string): Promise<string | undefined>;
 }
 
 export interface EncryptorService extends EncryptorExtension {

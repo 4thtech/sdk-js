@@ -1,24 +1,17 @@
-import { EncryptorExtensionCallback, EncryptorState } from '@4thtech-sdk/types';
+import { EncryptorState, ResponseData } from '@4thtech-sdk/types';
 
 enum EventName {
-  BLOCK_LABS_ENCRYPTOR_ERROR = 'block_labs_encryptor_error',
-  BLOCK_LABS_ENCRYPTOR_HANDSHAKE = 'block_labs_encryptor_handshake',
-  BLOCK_LABS_ENCRYPTOR_HEARTBEAT = 'block_labs_encryptor_heartbeat',
-  BLOCK_LABS_ENCRYPTOR_RESPONSE = 'block_labs_encryptor_response',
-  BLOCK_LABS_ENCRYPTOR_REQUEST = 'block_labs_encryptor_request',
-  BLOCK_LABS_ENCRYPTOR_STATE_CHANGE = 'block_labs_encryptor_state_change',
+  EMIT_HEARTBEAT = 'emitHeartbeat',
+  EMIT_ENCRYPTOR_STATE_CHANGE = 'emitEncryptorStateChange',
 }
 
 type RequestData = {
-  type?: string;
   publicKey?: string;
 };
 
 export class EncryptorEventHandler {
   private static instance: EncryptorEventHandler;
-  private currentId = 1;
-  private requests: Record<number, EncryptorExtensionCallback> = {};
-  private handshakeCallback: (() => void) | null = null;
+  private readonly extensionId = 'feolajpinjjfikmmeknkdjbllbppojij';
   private onHeartbeatCallback: (() => void) | null = null;
   private onStateChangeCallback: ((state: EncryptorState) => void) | null = null;
 
@@ -33,33 +26,30 @@ export class EncryptorEventHandler {
     return EncryptorEventHandler.instance;
   }
 
-  public requestHandshake(callback: () => void): void {
-    this.handshakeCallback = callback;
-    this.dispatchCustomEvent(EventName.BLOCK_LABS_ENCRYPTOR_HANDSHAKE, {});
+  public async getAppVersion(): Promise<string | undefined> {
+    const response = await this.sendMessageToExtension('getAppVersion').catch(() => {});
+
+    return response?.version;
   }
 
-  public getState(callback: EncryptorExtensionCallback): void {
-    this.dispatchCustomEvent(
-      EventName.BLOCK_LABS_ENCRYPTOR_REQUEST,
-      { type: 'getEncryptorState' },
-      callback,
-    );
+  public async getState(): Promise<EncryptorState | undefined> {
+    const response = await this.sendMessageToExtension('getEncryptorState').catch(() => {});
+
+    return response ? response.state : EncryptorState.NOT_GENERATED;
   }
 
-  public getPublicKey(callback: EncryptorExtensionCallback): void {
-    this.dispatchCustomEvent(
-      EventName.BLOCK_LABS_ENCRYPTOR_REQUEST,
-      { type: 'getPublicKey' },
-      callback,
-    );
+  public async getPublicKey(): Promise<string | undefined> {
+    const response = await this.sendMessageToExtension('getPublicKey').catch(() => {});
+
+    return response?.publicKey;
   }
 
-  public computeSharedSecretKey(publicKey: string, callback: EncryptorExtensionCallback): void {
-    this.dispatchCustomEvent(
-      EventName.BLOCK_LABS_ENCRYPTOR_REQUEST,
-      { type: 'computeSharedSecretKey', publicKey },
-      callback,
-    );
+  public async computeSharedSecretKey(publicKey: string): Promise<string | undefined> {
+    const response = await this.sendMessageToExtension('computeSharedSecretKey', {
+      publicKey,
+    }).catch(() => {});
+
+    return response?.sharedSecret;
   }
 
   public onHeartbeat(callback: () => void): void {
@@ -70,57 +60,47 @@ export class EncryptorEventHandler {
     this.onStateChangeCallback = callback;
   }
 
-  private dispatchCustomEvent(
-    name: string,
-    data: RequestData,
-    callback?: EncryptorExtensionCallback,
-  ): void {
-    if (callback) {
-      this.requests[this.currentId] = callback;
+  private async sendMessageToExtension(action: string, data?: RequestData): Promise<ResponseData> {
+    // Check if chrome.runtime and chrome.runtime.sendMessage are available
+    if (!chrome.runtime || !chrome.runtime.sendMessage) {
+      throw new Error(
+        'Extension is not installed or the environment does not support chrome.runtime.',
+      );
     }
 
-    document.dispatchEvent(
-      new CustomEvent(name, {
-        detail: {
-          ...data,
-          request_id: this.currentId,
-        },
-      }),
-    );
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(this.extensionId, { action, data }, (response) => {
+        // Check for no response scenario which could indicate the extension is not installed or has no listener
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        }
 
-    this.currentId++;
+        // Check if the response includes an error property, which is an application-specific error
+        if (response && response.error) {
+          reject(new Error(response.error));
+        }
+
+        resolve(response);
+      });
+    });
   }
 
   private setupEventListener(): void {
     window.addEventListener('message', this.handleMessageEvent.bind(this), false);
-
-    document.addEventListener(EventName.BLOCK_LABS_ENCRYPTOR_HEARTBEAT, () => {
-      this.onHeartbeatCallback?.();
-    });
-
-    document.addEventListener(EventName.BLOCK_LABS_ENCRYPTOR_STATE_CHANGE, (e) => {
-      const newState = (e as CustomEvent).detail.state;
-      this.onStateChangeCallback?.(newState);
-    });
   }
 
   private handleMessageEvent(event: MessageEvent): void {
     if (event.source !== window) return;
 
-    const { type, response } = event.data;
+    const { action, data } = event.data;
 
-    switch (type) {
-      case EventName.BLOCK_LABS_ENCRYPTOR_RESPONSE:
-        this.requests[response.request_id]?.(response);
-        delete this.requests[response.request_id];
+    switch (action) {
+      case EventName.EMIT_HEARTBEAT:
+        this.onHeartbeatCallback?.();
         break;
 
-      case EventName.BLOCK_LABS_ENCRYPTOR_HANDSHAKE:
-        this.handshakeCallback?.();
-        break;
-
-      case EventName.BLOCK_LABS_ENCRYPTOR_ERROR:
-        console.error(response);
+      case EventName.EMIT_ENCRYPTOR_STATE_CHANGE:
+        this.onStateChangeCallback?.(data.state);
         break;
     }
   }
