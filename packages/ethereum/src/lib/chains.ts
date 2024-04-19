@@ -164,24 +164,24 @@ export const immu3Testnet: Chain = defineChain({
   nativeCurrency: { name: 'IMMU', symbol: 'IMMU', decimals: 18 },
   rpcUrls: {
     default: {
-      http: ['https://fraa-dancebox-3043-rpc.a.dancebox.tanssi.network'],
+      http: ['https://fraa-flashbox-2800-rpc.a.stagenet.tanssi.network'],
     },
     public: {
-      http: ['https://fraa-dancebox-3043-rpc.a.dancebox.tanssi.network'],
+      http: ['https://fraa-flashbox-2800-rpc.a.stagenet.tanssi.network'],
     },
   },
   contracts: {
     appFeeManager: {
-      address: '0xE459E555f0CCd996F03A601158eEAe6deC4633bC',
+      address: '0x1130412f89E2C5fc4B76dadDa9c555D7ccac2AB7',
     },
     mail: {
-      address: '0xa6199D54df4c904976DC1741eE75A9570c7A3308',
+      address: '0x2B568A7D93DdDe2cbEE293013e80617ab60Efd80',
     },
     chat: {
-      address: '0xe7fD30fd5958165e46e618DfD8e6ef0FbB967827',
+      address: '0xb157cdB09284D8284fe88DaBaF3a5e1472F7dBDa',
     },
     user: {
-      address: '0x5aCeed5372E91C1EB2C09E0F5C46B29A282b2C2D',
+      address: '0x6625570b2d3B8C5d0Fb9b5Ac812462Cc18365914',
     },
   },
   testnet: true,
