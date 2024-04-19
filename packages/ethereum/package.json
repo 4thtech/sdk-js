@@ -1,6 +1,6 @@
 {
   "name": "@4thtech-sdk/ethereum",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "type": "commonjs",
   "dependencies": {
     "ethers": "^6.11.1"
