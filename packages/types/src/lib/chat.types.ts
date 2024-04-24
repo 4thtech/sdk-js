@@ -41,7 +41,7 @@ export type Conversation = {
   creator: Address;
   isOnlyCreatorAllowedToAddMembers: boolean;
   isEncrypted: boolean;
-  members: readonly Address[];
+  members: Address[];
 };
 
 export type ContractMessageOutput = {

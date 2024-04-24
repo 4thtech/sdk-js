@@ -208,7 +208,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
       creator,
       isOnlyCreatorAllowedToAddMembers,
       isEncrypted,
-      members,
+      members: [...members],
     };
   }
 
