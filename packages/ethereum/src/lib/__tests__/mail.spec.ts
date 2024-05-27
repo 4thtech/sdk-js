@@ -15,6 +15,7 @@ import * as fs from 'fs';
 // Initialize signer
 const signer = new TestWalletClient();
 const receiver = new TestWalletClient(1);
+const member1 = new TestWalletClient(2);
 
 // Define remote storage provider
 const remoteStorageProvider = new TestRemoteStorageProvider();
@@ -205,6 +206,14 @@ describe('Mail', () => {
       expect(envelope.openedAt?.valueOf()).toBeGreaterThan(0);
     });
 
+    it('Should add users to whitelist', async () => {
+      await mail.addToWhitelist([await receiver.getAddress(), await member1.getAddress()]);
+
+      expect(await mail.isWhitelisted(await signer.getAddress(), await receiver.getAddress())).toBe(
+        true,
+      );
+    });
+
     it('Should delete mail', async () => {
       await mail.send({ envelope });
 
@@ -227,6 +236,15 @@ describe('Mail', () => {
 
       expect(mail.fetch(await receiver.getAddress(), mailIndexes[0])).rejects.toThrowError();
       expect(mail.fetch(await receiver.getAddress(), mailIndexes[1])).rejects.toThrowError();
+    });
+
+    it('Should delete users from whitelist', async () => {
+      await mail.addToWhitelist([await receiver.getAddress(), await member1.getAddress()]);
+      await mail.removeFromWhitelist([await receiver.getAddress()]);
+
+      expect(await mail.isWhitelisted(await signer.getAddress(), await receiver.getAddress())).toBe(
+        false,
+      );
     });
   });
 
@@ -259,13 +277,6 @@ describe('Mail', () => {
       expect(envelope.content.attachments).toBeDefined();
     });
 
-    it('Should fetch mails', async () => {
-      const envelopes = await mail.fetchAll(receiverAddress);
-
-      expect(envelopes).toBeDefined();
-      expect(envelopes.length).toBeGreaterThan(0);
-    });
-
     it('Should fetch mails paginated', async () => {
       const pageNumber = await mail.count(receiverAddress);
       const pageSize = 1n;
@@ -287,10 +298,30 @@ describe('Mail', () => {
       expect(mailCount > 0n).toBeTruthy();
     });
 
-    it('Should get user app ids', async () => {
-      const userAppIds = await mail.getUserAppIds(receiverAddress);
+    it('Should count whitelisted users', async () => {
+      await mail.addToWhitelist([await receiver.getAddress(), await member1.getAddress()]);
+      const whitelistedUsers = await mail.fetchWhitelistedUsersPaginated(
+        await signer.getAddress(),
+        1n,
+        10n,
+      );
+      const whitelistedUsersCount = await mail.getWhitelistedUsersCount(await signer.getAddress());
+
+      expect(BigInt(whitelistedUsers.length)).toBe(whitelistedUsersCount);
+    });
+
+    it('Should get user app ids paginated', async () => {
+      const pageNumber = 1n;
+      const pageSize = 10n;
+      const userAppIds = await mail.getUserAppIdsPaginated(receiverAddress, pageNumber, pageSize);
 
       expect(userAppIds.length).to.be.equal(1);
+    });
+
+    it('Should count apps', async () => {
+      const userAppsCount = await mail.getUserAppIdsCount(receiverAddress);
+
+      expect(userAppsCount > 0n).toBeTruthy();
     });
 
     it('Should download attachment', async () => {
@@ -372,6 +403,26 @@ describe('Mail', () => {
       const mailIndex = mailCount - 1n;
 
       await mailAsReceiver.deleteMail(mailIndex);
+    });
+
+    it('Should emit event on user added to whitelist', async () => {
+      mail.onUserAddedToWhitelist(senderAddress, null, (user, whitelistedSender) => {
+        console.log(user);
+        console.log(whitelistedSender);
+      });
+
+      await mail.removeFromWhitelist([await member1.getAddress()]);
+      await mail.addToWhitelist([await member1.getAddress()]);
+    });
+
+    it('Should emit event on user deleted from whitelist', async () => {
+      mail.onUserRemovedFromWhitelist(senderAddress, null, (user, whitelistedSender) => {
+        console.log(user);
+        console.log(whitelistedSender);
+      });
+
+      await mail.addToWhitelist([await member1.getAddress()]);
+      await mail.removeFromWhitelist([await member1.getAddress()]);
     });
   });
 });

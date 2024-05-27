@@ -38,15 +38,17 @@ export interface Mailable {
 
   fetch(receiver: Address, mailIndex: bigint): Promise<ReceivedEnvelope>;
 
-  fetchAll(receiver: Address): Promise<ReceivedEnvelope[]>;
-
   fetchPaginated(receiver: Address, page: bigint, pageSize: bigint): Promise<ReceivedEnvelope[]>;
 
   fetchByTransactionHash(transactionHash: TransactionHash): Promise<ReceivedEnvelope>;
 
   count(receiver: Address): Promise<bigint>;
 
-  getUserAppIds(user: Address): Promise<ReadonlyArray<AppId>>;
+  getUserAppIdsPaginated(
+    user: Address,
+    page: bigint,
+    pageSize: bigint,
+  ): Promise<ReadonlyArray<AppId>>;
 
   downloadAttachment(attachment: RemoteFileInfo): Promise<ArrayBuffer>;
 
@@ -127,6 +129,18 @@ export type MailDeletedEventOutput = {
   receiver: Address;
   index: bigint;
   deletedAt: bigint;
+};
+
+export type AddedToWhitelistEventOutput = {
+  appId: AppId;
+  user: Address;
+  whitelistedSender: Address;
+};
+
+export type RemovedFromWhitelistEventOutput = {
+  appId: AppId;
+  user: Address;
+  whitelistedSender: Address;
 };
 
 export type EnvelopeTransactionFilter = {

@@ -1,4 +1,5 @@
 import {
+  AddedToWhitelistEventOutput,
   Address,
   AppId,
   ContractMailOutput,
@@ -12,6 +13,7 @@ import {
   MailSentEventOutput,
   ReceivedEnvelope,
   RemoteFileInfo,
+  RemovedFromWhitelistEventOutput,
   TransactionHash,
   WalletClient,
 } from '@4thtech-sdk/types';
@@ -96,6 +98,19 @@ export class Mail extends MailContract implements Mailable {
   }
 
   /**
+   * Add users to whitelist.
+   *
+   * @param {Address[]} users - The users addresses to be whitelisted.
+   * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
+   */
+  public async addToWhitelist(users: Address[]): Promise<EthereumTransactionResponse> {
+    return this.sendContractTransaction({
+      functionName: 'addToWhitelist',
+      args: [this.appId, users],
+    });
+  }
+
+  /**
    *  Deletes a specific mail. This method can only perform a receiver of the mail.
    *
    * @param {BigInt} mailIndex - The index of the mail to be deleted.
@@ -122,6 +137,19 @@ export class Mail extends MailContract implements Mailable {
   }
 
   /**
+   * Remove users from whitelist.
+   *
+   * @param {Address[]} users - The users addresses to be removed from whitelist.
+   * @returns {Promise<EthereumTransactionResponse>} Response of transaction.
+   */
+  public async removeFromWhitelist(users: Address[]): Promise<EthereumTransactionResponse> {
+    return this.sendContractTransaction({
+      functionName: 'removeFromWhitelist',
+      args: [this.appId, users],
+    });
+  }
+
+  /**
    *  Fetch a specific mail.
    *
    * @param {Address} receiver - The mail receiver address.
@@ -136,22 +164,6 @@ export class Mail extends MailContract implements Mailable {
     });
 
     return this.processContractMailOutput(contractMailOutput, receiver);
-  }
-
-  /**
-   *  Fetch all mails.
-   *
-   * @param {Address} receiver - The mail receiver address.
-   * @returns {Promise<ReceivedEnvelope[]>} Array of received mail Envelopes.
-   */
-  public async fetchAll(receiver: Address): Promise<ReceivedEnvelope[]> {
-    const contractMailOutputs: ContractMailOutputs = await this.publicClient.readContract({
-      ...this.contractConfig,
-      functionName: 'getMails',
-      args: [this.appId, receiver],
-    });
-
-    return this.processContractMailOutputs(contractMailOutputs, receiver);
   }
 
   /**
@@ -201,15 +213,84 @@ export class Mail extends MailContract implements Mailable {
   }
 
   /**
+   *  Fetch whitelisted users paginated.
+   *
+   * @param {Address} user - The users address.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
+   * @returns {Promise<Address[]>} Array of whitelisted users.
+   */
+  public async fetchWhitelistedUsersPaginated(
+    user: Address,
+    pageNumber: bigint,
+    pageSize: bigint,
+  ): Promise<readonly Address[]> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getWhitelistedUsersPaginated',
+      args: [this.appId, user, pageNumber, pageSize],
+    });
+  }
+
+  /**
+   *  Counts the number of whitelisted users of a user.
+   *
+   * @param {Address} user - The user address.
+   * @returns {Promise<BigInt>} Number of whitelisted users.
+   */
+  public async getWhitelistedUsersCount(user: Address): Promise<bigint> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getWhitelistedUsersCount',
+      args: [this.appId, user],
+    });
+  }
+
+  /**
+   *  Checks if a sender is whitelisted to interact with a receiver.
+   *
+   * @param {Address} receiver - The receiver address.
+   * @param {Address} sender - The sender address.
+   * @returns {Promise<boolean>} Whether the user is whitelisted.
+   */
+  public async isWhitelisted(receiver: Address, sender: Address): Promise<boolean> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'isWhitelisted',
+      args: [this.appId, receiver, sender],
+    });
+  }
+
+  /**
    *  Retrieves the user's App ID's.
    *
    * @param {Address} user - The user address.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
    * @returns {Promise<AppId[]>} Array of App ID's.
    */
-  public async getUserAppIds(user: Address): Promise<readonly AppId[]> {
+  public async getUserAppIdsPaginated(
+    user: Address,
+    pageNumber: bigint,
+    pageSize: bigint,
+  ): Promise<readonly AppId[]> {
     return this.publicClient.readContract({
       ...this.contractConfig,
-      functionName: 'getUserAppIds',
+      functionName: 'getUserAppIdsPaginated',
+      args: [user, pageNumber, pageSize],
+    });
+  }
+
+  /**
+   *  Counts the number of apps of a user.
+   *
+   * @param {Address} user - The user address.
+   * @returns {Promise<BigInt>} Number of apps.
+   */
+  public async getUserAppIdsCount(user: Address): Promise<bigint> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getUserAppIdsCount',
       args: [user],
     });
   }
@@ -300,6 +381,60 @@ export class Mail extends MailContract implements Mailable {
           if (args.appId) {
             const eventOutput = args as MailDeletedEventOutput;
             callback(eventOutput.index, eventOutput.deletedAt);
+          }
+        }),
+    });
+  }
+
+  /**
+   *  Listener for user added whitelist event.
+   *
+   * @param {Address | null } user - The whitelist user address.
+   * @param {Address | null } whitelistedSender - The whitelisted sender address.
+   * @param {Function} callback - The callback function.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs.
+   */
+  public onUserAddedToWhitelist(
+    user: Address | null,
+    whitelistedSender: Address | null,
+    callback: (user: Address, whitelistedSender: Address) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'AddedToWhitelist',
+      args: { appId: this.appId, user, whitelistedSender },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          if (args.appId) {
+            const eventOutput = args as AddedToWhitelistEventOutput;
+            callback(eventOutput.user, eventOutput.whitelistedSender);
+          }
+        }),
+    });
+  }
+
+  /**
+   *  Listener for user removed whitelist event.
+   *
+   * @param {Address | null } user - The whitelist user address.
+   * @param {Address | null } whitelistedSender - The whitelisted sender address.
+   * @param {Function} callback - The callback function.
+   * @returns {WatchContractEventReturnType} A function that can be invoked to stop watching for new event logs.
+   */
+  public onUserRemovedFromWhitelist(
+    user: Address | null,
+    whitelistedSender: Address | null,
+    callback: (user: Address, whitelistedSender: Address) => void,
+  ): WatchContractEventReturnType {
+    return this.publicClient.watchContractEvent({
+      ...this.contractConfig,
+      eventName: 'RemovedFromWhitelist',
+      args: { appId: this.appId, user, whitelistedSender },
+      onLogs: (logs) =>
+        logs.forEach(async ({ args }) => {
+          if (args.appId) {
+            const eventOutput = args as RemovedFromWhitelistEventOutput;
+            callback(eventOutput.user, eventOutput.whitelistedSender);
           }
         }),
     });

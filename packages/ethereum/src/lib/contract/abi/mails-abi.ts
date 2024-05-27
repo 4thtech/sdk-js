@@ -5,22 +5,108 @@ export const mailsAbi = [
     type: 'constructor',
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: false,
         internalType: 'address',
-        name: 'previousAdmin',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'address',
-        name: 'newAdmin',
+        name: 'target',
         type: 'address',
       },
     ],
-    name: 'AdminChanged',
+    name: 'AddressEmptyCode',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'implementation',
+        type: 'address',
+      },
+    ],
+    name: 'ERC1967InvalidImplementation',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ERC1967NonPayable',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'FailedInnerCall',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'InvalidInitialization',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NotInitializing',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableInvalidOwner',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableUnauthorizedAccount',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'UUPSUnauthorizedCallContext',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'slot',
+        type: 'bytes32',
+      },
+    ],
+    name: 'UUPSUnsupportedProxiableUUID',
+    type: 'error',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'whitelistedSender',
+        type: 'address',
+      },
+    ],
+    name: 'AddedToWhitelist',
     type: 'event',
   },
   {
@@ -46,19 +132,6 @@ export const mailsAbi = [
       },
     ],
     name: 'AppFeesWithdrawn',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'beacon',
-        type: 'address',
-      },
-    ],
-    name: 'BeaconUpgraded',
     type: 'event',
   },
   {
@@ -103,9 +176,9 @@ export const mailsAbi = [
     inputs: [
       {
         indexed: false,
-        internalType: 'uint8',
+        internalType: 'uint64',
         name: 'version',
-        type: 'uint8',
+        type: 'uint64',
       },
     ],
     name: 'Initialized',
@@ -283,6 +356,31 @@ export const mailsAbi = [
     inputs: [
       {
         indexed: true,
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'whitelistedSender',
+        type: 'address',
+      },
+    ],
+    name: 'RemovedFromWhitelist',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
         internalType: 'address',
         name: 'implementation',
         type: 'address',
@@ -290,6 +388,37 @@ export const mailsAbi = [
     ],
     name: 'Upgraded',
     type: 'event',
+  },
+  {
+    inputs: [],
+    name: 'UPGRADE_INTERFACE_VERSION',
+    outputs: [
+      {
+        internalType: 'string',
+        name: '',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address[]',
+        name: 'whitelistedSenders',
+        type: 'address[]',
+      },
+    ],
+    name: 'addToWhitelist',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
     inputs: [
@@ -449,72 +578,6 @@ export const mailsAbi = [
         type: 'address',
       },
     ],
-    name: 'getMails',
-    outputs: [
-      {
-        components: [
-          {
-            internalType: 'address',
-            name: 'sender',
-            type: 'address',
-          },
-          {
-            internalType: 'string',
-            name: 'envelopeUrl',
-            type: 'string',
-          },
-          {
-            internalType: 'string',
-            name: 'envelopeChecksum',
-            type: 'string',
-          },
-          {
-            internalType: 'uint256',
-            name: 'sentAt',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'openedAt',
-            type: 'uint256',
-          },
-          {
-            internalType: 'string',
-            name: 'metadata',
-            type: 'string',
-          },
-          {
-            internalType: 'uint256',
-            name: 'index',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bool',
-            name: 'isDeleted',
-            type: 'bool',
-          },
-        ],
-        internalType: 'struct Mails.Mail[]',
-        name: '',
-        type: 'tuple[]',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'bytes32',
-        name: 'appId',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'address',
-        name: 'receiver',
-        type: 'address',
-      },
-    ],
     name: 'getMailsCount',
     outputs: [
       {
@@ -623,7 +686,36 @@ export const mailsAbi = [
         type: 'address',
       },
     ],
-    name: 'getUserAppIds',
+    name: 'getUserAppIdsCount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'page',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'pageSize',
+        type: 'uint256',
+      },
+    ],
+    name: 'getUserAppIdsPaginated',
     outputs: [
       {
         internalType: 'bytes32[]',
@@ -637,14 +729,106 @@ export const mailsAbi = [
   {
     inputs: [
       {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+    ],
+    name: 'getWhitelistedUsersCount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'page',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'pageSize',
+        type: 'uint256',
+      },
+    ],
+    name: 'getWhitelistedUsersPaginated',
+    outputs: [
+      {
+        internalType: 'address[]',
+        name: '',
+        type: 'address[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
         internalType: 'address',
         name: 'appFeeManagerAddress',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'initialOwner',
         type: 'address',
       },
     ],
     name: 'initialize',
     outputs: [],
     stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'receiver',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
+      },
+    ],
+    name: 'isWhitelisted',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
     type: 'function',
   },
   {
@@ -671,6 +855,24 @@ export const mailsAbi = [
       },
     ],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address[]',
+        name: 'whitelistedSenders',
+        type: 'address[]',
+      },
+    ],
+    name: 'removeFromWhitelist',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -753,19 +955,6 @@ export const mailsAbi = [
       },
     ],
     name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'newImplementation',
-        type: 'address',
-      },
-    ],
-    name: 'upgradeTo',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
