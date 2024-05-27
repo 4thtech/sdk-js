@@ -5,36 +5,84 @@ export const usersAbi = [
     type: 'constructor',
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: false,
         internalType: 'address',
-        name: 'previousAdmin',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'address',
-        name: 'newAdmin',
+        name: 'target',
         type: 'address',
       },
     ],
-    name: 'AdminChanged',
-    type: 'event',
+    name: 'AddressEmptyCode',
+    type: 'error',
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: true,
         internalType: 'address',
-        name: 'beacon',
+        name: 'implementation',
         type: 'address',
       },
     ],
-    name: 'BeaconUpgraded',
-    type: 'event',
+    name: 'ERC1967InvalidImplementation',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ERC1967NonPayable',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'FailedInnerCall',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'InvalidInitialization',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NotInitializing',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableInvalidOwner',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableUnauthorizedAccount',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'UUPSUnauthorizedCallContext',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'slot',
+        type: 'bytes32',
+      },
+    ],
+    name: 'UUPSUnsupportedProxiableUUID',
+    type: 'error',
   },
   {
     anonymous: false,
@@ -66,9 +114,9 @@ export const usersAbi = [
     inputs: [
       {
         indexed: false,
-        internalType: 'uint8',
+        internalType: 'uint64',
         name: 'version',
-        type: 'uint8',
+        type: 'uint64',
       },
     ],
     name: 'Initialized',
@@ -105,6 +153,19 @@ export const usersAbi = [
     ],
     name: 'Upgraded',
     type: 'event',
+  },
+  {
+    inputs: [],
+    name: 'UPGRADE_INTERFACE_VERSION',
+    outputs: [
+      {
+        internalType: 'string',
+        name: '',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
     inputs: [
@@ -145,7 +206,13 @@ export const usersAbi = [
     type: 'function',
   },
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'initialOwner',
+        type: 'address',
+      },
+    ],
     name: 'initialize',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -211,19 +278,6 @@ export const usersAbi = [
       },
     ],
     name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'newImplementation',
-        type: 'address',
-      },
-    ],
-    name: 'upgradeTo',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
