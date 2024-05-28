@@ -133,17 +133,23 @@ describe('Chat', () => {
       describe('Unencrypted', () => {
         const conversationName = 'Group Conversation';
         let lastConversation: Conversation;
+        let lastConversationMembersCount: bigint;
 
         beforeEach(async () => {
           const members = [await receiver.getAddress()];
 
           await chat.createGroupConversation(conversationName, true, false, members);
 
-          const conversations = await chat.fetchConversations(senderAddress);
-
+          const conversationsCount = await chat.getConversationsCount(senderAddress);
+          const conversations = await chat.fetchConversationsPaginated(
+            senderAddress,
+            conversationsCount,
+            1n,
+          );
           if (conversations.length) {
             lastConversation = conversations[conversations.length - 1];
             conversationHash = lastConversation.hash;
+            lastConversationMembersCount = await chat.getConversationMembersCount(conversationHash);
           }
         });
 
@@ -158,9 +164,8 @@ describe('Chat', () => {
             await member1.getAddress(),
             await member2.getAddress(),
           ]);
-          const conversation = await chat.fetchConversation(lastConversation.hash);
 
-          expect(conversation.members.length).to.be.equal(4);
+          expect(await chat.getConversationMembersCount(lastConversation.hash)).to.be.equal(4n);
         });
 
         it('Should remove member from group conversation', async () => {
@@ -168,9 +173,10 @@ describe('Chat', () => {
             lastConversation.hash,
             await receiver.getAddress(),
           );
-          const conversation = await chat.fetchConversation(lastConversation.hash);
 
-          expect(conversation.members.length).to.be.equal(lastConversation.members.length - 1);
+          expect(await chat.getConversationMembersCount(conversationHash)).to.be.equal(
+            lastConversationMembersCount - 1n,
+          );
         });
 
         it('Should remove members from group conversation', async () => {
@@ -178,16 +184,21 @@ describe('Chat', () => {
             await member1.getAddress(),
             await member2.getAddress(),
           ]);
-          const conversationBefore = await chat.fetchConversation(lastConversation.hash);
+
+          const conversationCountBefore = await chat.getConversationMembersCount(
+            lastConversation.hash,
+          );
+
           await chat.removeMembersFromGroupConversation(lastConversation.hash, [
             await receiver.getAddress(),
             await member1.getAddress(),
           ]);
-          const conversationAfter = await chat.fetchConversation(lastConversation.hash);
 
-          expect(conversationAfter.members.length).to.be.equal(
-            conversationBefore.members.length - 2,
+          const conversationCountAfter = await chat.getConversationMembersCount(
+            lastConversation.hash,
           );
+
+          expect(conversationCountAfter).to.be.equal(conversationCountBefore - 2n);
         });
 
         it('Should add message to a group conversations', async () => {
@@ -214,7 +225,12 @@ describe('Chat', () => {
 
           await chat.createGroupConversation(conversationName, true, true, members);
 
-          const conversations = await chat.fetchConversations(senderAddress);
+          const conversationsCount = await chat.getConversationsCount(senderAddress);
+          const conversations = await chat.fetchConversationsPaginated(
+            senderAddress,
+            conversationsCount,
+            1n,
+          );
 
           if (conversations.length) {
             lastConversation = conversations[conversations.length - 1];
@@ -242,9 +258,8 @@ describe('Chat', () => {
             await member1.getAddress(),
             await member2.getAddress(),
           ]);
-          const conversation = await chat.fetchConversation(lastConversation.hash);
 
-          expect(conversation.members.length).to.be.equal(4);
+          expect(await chat.getConversationMembersCount(lastConversation.hash)).to.be.equal(4n);
         });
       });
     });
@@ -256,7 +271,11 @@ describe('Chat', () => {
     });
 
     it('Should fetch conversation hashes', async () => {
-      const conversationHashes = await chat.fetchConversationHashes(receiverAddress);
+      const conversationHashes = await chat.fetchConversationHashesPaginated(
+        receiverAddress,
+        1n,
+        10n,
+      );
 
       expect(conversationHashes).toBeDefined();
       expect(conversationHashes.length).to.be.greaterThanOrEqual(1);
@@ -265,13 +284,15 @@ describe('Chat', () => {
     it('Should fetch conversation', async () => {
       const conversation = await chat.fetchConversation(conversationHash);
 
+      console.log(conversation);
+
       expect(conversation).toBeDefined();
-      expect(conversation.members.length).to.be.greaterThanOrEqual(2);
+      expect(conversation.members?.length).to.be.greaterThanOrEqual(2);
       expect((await chat.countMessages(conversationHash)) > 0).toBeTruthy();
     });
 
     it('Should fetch conversations', async () => {
-      const conversations = await chat.fetchConversations(receiverAddress);
+      const conversations = await chat.fetchConversationsPaginated(receiverAddress, 1n, 10n);
 
       expect(conversations.length).to.be.greaterThanOrEqual(1);
     });
@@ -290,11 +311,13 @@ describe('Chat', () => {
     });
 
     it('Should get user app ids', async () => {
-      const senderAppIds = await chat.getUserAppIds(senderAddress);
-      const receiverAppIds = await chat.getUserAppIds(receiverAddress);
+      const senderAppIds = await chat.getUserAppIdsPaginated(senderAddress, 1n, 10n);
+      const receiverAppIds = await chat.getUserAppIdsPaginated(receiverAddress, 1n, 10n);
+      const receiverAppsCount = await chat.getUserAppIdsCount(receiverAddress);
 
       expect(senderAppIds.length).to.be.equal(1);
       expect(receiverAppIds.length).to.be.equal(1);
+      expect(BigInt(receiverAppIds.length)).to.be.equal(receiverAppsCount);
     });
   });
 
@@ -356,7 +379,12 @@ describe('Chat', () => {
       const members = [await receiver.getAddress()];
       await chat.createGroupConversation('Group Conversation', true, false, members);
 
-      const conversations = await chat.fetchConversations(senderAddress);
+      const conversationsCount = await chat.getConversationsCount(senderAddress);
+      const conversations = await chat.fetchConversationsPaginated(
+        senderAddress,
+        conversationsCount,
+        1n,
+      );
 
       if (conversations.length) {
         const lastConversation = conversations[conversations.length - 1];
@@ -376,7 +404,12 @@ describe('Chat', () => {
       const members = [await receiver.getAddress()];
       await chat.createGroupConversation('Group Conversation', true, false, members);
 
-      const conversations = await chat.fetchConversations(senderAddress);
+      const conversationsCount = await chat.getConversationsCount(senderAddress);
+      const conversations = await chat.fetchConversationsPaginated(
+        senderAddress,
+        conversationsCount,
+        1n,
+      );
 
       if (conversations.length) {
         const lastConversation = conversations[conversations.length - 1];

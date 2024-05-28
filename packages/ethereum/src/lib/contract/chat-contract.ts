@@ -157,7 +157,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
     return conversation.isGroup
       ? this.getEncryptionForGroupConversation(conversation.hash)
       : this.getEncryptionForOneToOneConversation(
-          this.getReceiverFromConversation(conversation, signerAddress),
+          this.getReceiverFromOneToOneConversation(conversation, signerAddress),
         );
   }
 
@@ -198,7 +198,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
   protected async processContractConversationOutput(
     contactConversationOutput: ContractConversationOutput,
   ): Promise<Conversation> {
-    const { hash, isGroup, name, creator, isOnlyCreatorAllowedToAddMembers, isEncrypted, members } =
+    const { hash, isGroup, name, creator, isOnlyCreatorAllowedToAddMembers, isEncrypted } =
       contactConversationOutput;
 
     return {
@@ -208,7 +208,6 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
       creator,
       isOnlyCreatorAllowedToAddMembers,
       isEncrypted,
-      members: [...members],
     };
   }
 
@@ -304,7 +303,16 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
     return arrayBufferToString(encryptionSecretKey);
   }
 
-  private getReceiverFromConversation(conversation: Conversation, signerAddress: Address): Address {
+  private getReceiverFromOneToOneConversation(
+    conversation: Conversation,
+    signerAddress: Address,
+  ): Address {
+    if (!conversation.members) {
+      throw new Error(
+        'Conversation does not have members. Please fetch conversation members first.',
+      );
+    }
+
     return signerAddress === conversation.members[0]
       ? conversation.members[1]
       : conversation.members[0];

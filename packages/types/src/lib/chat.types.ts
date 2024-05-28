@@ -41,7 +41,7 @@ export type Conversation = {
   creator: Address;
   isOnlyCreatorAllowedToAddMembers: boolean;
   isEncrypted: boolean;
-  members: Address[];
+  members?: Address[];
 };
 
 export type ContractMessageOutput = {
@@ -62,7 +62,6 @@ export type ContractConversationOutput = {
   creator: Address;
   isOnlyCreatorAllowedToAddMembers: boolean;
   isEncrypted: boolean;
-  members: readonly Address[];
 };
 
 export type ContractConversationOutputs = ReadonlyArray<ContractConversationOutput>;

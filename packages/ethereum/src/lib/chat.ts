@@ -273,7 +273,7 @@ export class Chat extends ChatContract {
   public async countMessages(conversationHash: ConversationHash): Promise<bigint> {
     return this.publicClient.readContract({
       ...this.contractConfig,
-      functionName: 'getMessagesCount',
+      functionName: 'getConversationMessagesCount',
       args: [conversationHash],
     });
   }
@@ -282,12 +282,32 @@ export class Chat extends ChatContract {
    * Fetches the conversation hashes related to an account.
    *
    * @param {Address} account - The target account.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
    * @returns {Promise<ConversationHash[]>} A promise that resolves to an array of conversation hashes related to the account.
    */
-  public async fetchConversationHashes(account: Address): Promise<readonly ConversationHash[]> {
+  public async fetchConversationHashesPaginated(
+    account: Address,
+    pageNumber: bigint,
+    pageSize: bigint,
+  ): Promise<readonly ConversationHash[]> {
     return this.publicClient.readContract({
       ...this.contractConfig,
-      functionName: 'getConversationHashes',
+      functionName: 'getConversationHashesPaginated',
+      args: [this.appId, account, pageNumber, pageSize],
+    });
+  }
+
+  /**
+   *  Counts the number of conversations for an account.
+   *
+   * @param {Address} account - The target account.
+   * @returns {Promise<BigInt>} Number of conversations.
+   */
+  public async getConversationsCount(account: Address): Promise<bigint> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getConversationsCount',
       args: [this.appId, account],
     });
   }
@@ -299,31 +319,79 @@ export class Chat extends ChatContract {
    * @returns {Promise<Conversation>} A promise that resolves to the fetched conversation.
    */
   public async fetchConversation(conversationHash: ConversationHash): Promise<Conversation> {
-    const contactConversationOutput: ContractConversationOutput =
+    const contractConversationOutputs: ContractConversationOutput =
       await this.publicClient.readContract({
         ...this.contractConfig,
         functionName: 'getConversation',
         args: [conversationHash],
       });
 
-    return this.processContractConversationOutput(contactConversationOutput);
+    const conversation = await this.processContractConversationOutput(contractConversationOutputs);
+
+    if (!conversation.isGroup) {
+      conversation.members = [
+        ...(await this.fetchConversationMembersPaginated(conversationHash, 1n, 2n)),
+      ];
+    }
+
+    return conversation;
   }
 
   /**
    * Fetches all the conversations related to an account.
    *
    * @param {Address} account - The target account.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
    * @returns {Promise<Conversation[]>} A promise that resolves to an array of conversations related to the account.
    */
-  public async fetchConversations(account: Address): Promise<Conversation[]> {
-    const contactConversationOutputs: ContractConversationOutputs =
+  public async fetchConversationsPaginated(
+    account: Address,
+    pageNumber: bigint,
+    pageSize: bigint,
+  ): Promise<Conversation[]> {
+    const contractConversationOutputs: ContractConversationOutputs =
       await this.publicClient.readContract({
         ...this.contractConfig,
-        functionName: 'getConversations',
-        args: [this.appId, account],
+        functionName: 'getConversationsPaginated',
+        args: [this.appId, account, pageNumber, pageSize],
       });
 
-    return this.processContractConversationOutputs(contactConversationOutputs);
+    return this.processContractConversationOutputs(contractConversationOutputs);
+  }
+
+  /**
+   * Fetches the members of a conversation in a paginated manner.
+   *
+   * @param {ConversationHash} conversationHash - The target conversation's hash.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
+   * @returns {Promise<Address[]>} A promise that resolves to an array of members of the conversation.
+   */
+  public async fetchConversationMembersPaginated(
+    conversationHash: ConversationHash,
+    pageNumber: bigint,
+    pageSize: bigint,
+  ): Promise<readonly Address[]> {
+    return await this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getConversationMembersPaginated',
+      args: [conversationHash, pageNumber, pageSize],
+    });
+  }
+
+  /**
+   *  Counts the number of members of a conversation.
+   *
+   * @param {ConversationHash} conversationHash - The conversation's hash.
+   * @returns {Promise<BigInt>} Number of members.
+   */
+  public async getConversationMembersCount(conversationHash: ConversationHash): Promise<bigint> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getConversationMembersCount',
+      args: [conversationHash],
+    });
   }
 
   /**
@@ -352,12 +420,32 @@ export class Chat extends ChatContract {
    * Fetches the app IDs a user is related to.
    *
    * @param {Address} user - The target user address.
+   * @param {BigInt} pageNumber - The page number.
+   * @param {BigInt} pageSize - The page size.
    * @returns {Promise<AppId[]>} A promise that resolves to an array of app IDs the user is related to.
    */
-  public async getUserAppIds(user: Address): Promise<readonly AppId[]> {
+  public async getUserAppIdsPaginated(
+    user: Address,
+    pageNumber: bigint,
+    pageSize: bigint,
+  ): Promise<readonly AppId[]> {
     return this.publicClient.readContract({
       ...this.contractConfig,
-      functionName: 'getUserAppIds',
+      functionName: 'getUserAppIdsPaginated',
+      args: [user, pageNumber, pageSize],
+    });
+  }
+
+  /**
+   *  Counts the number of apps of a user.
+   *
+   * @param {Address} user - The user address.
+   * @returns {Promise<BigInt>} Number of apps.
+   */
+  public async getUserAppIdsCount(user: Address): Promise<bigint> {
+    return this.publicClient.readContract({
+      ...this.contractConfig,
+      functionName: 'getUserAppIdsCount',
       args: [user],
     });
   }

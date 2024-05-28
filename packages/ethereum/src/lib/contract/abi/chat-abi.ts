@@ -5,23 +5,84 @@ export const chatAbi = [
     type: 'constructor',
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: false,
         internalType: 'address',
-        name: 'previousAdmin',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'address',
-        name: 'newAdmin',
+        name: 'target',
         type: 'address',
       },
     ],
-    name: 'AdminChanged',
-    type: 'event',
+    name: 'AddressEmptyCode',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'implementation',
+        type: 'address',
+      },
+    ],
+    name: 'ERC1967InvalidImplementation',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ERC1967NonPayable',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'FailedInnerCall',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'InvalidInitialization',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NotInitializing',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableInvalidOwner',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableUnauthorizedAccount',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'UUPSUnauthorizedCallContext',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'slot',
+        type: 'bytes32',
+      },
+    ],
+    name: 'UUPSUnsupportedProxiableUUID',
+    type: 'error',
   },
   {
     anonymous: false,
@@ -46,19 +107,6 @@ export const chatAbi = [
       },
     ],
     name: 'AppFeesWithdrawn',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'beacon',
-        type: 'address',
-      },
-    ],
-    name: 'BeaconUpgraded',
     type: 'event',
   },
   {
@@ -153,9 +201,9 @@ export const chatAbi = [
     inputs: [
       {
         indexed: false,
-        internalType: 'uint8',
+        internalType: 'uint64',
         name: 'version',
-        type: 'uint8',
+        type: 'uint64',
       },
     ],
     name: 'Initialized',
@@ -335,6 +383,19 @@ export const chatAbi = [
     ],
     name: 'Upgraded',
     type: 'event',
+  },
+  {
+    inputs: [],
+    name: 'UPGRADE_INTERFACE_VERSION',
+    outputs: [
+      {
+        internalType: 'string',
+        name: '',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
   },
   {
     inputs: [
@@ -533,11 +594,6 @@ export const chatAbi = [
             name: 'isEncrypted',
             type: 'bool',
           },
-          {
-            internalType: 'address[]',
-            name: 'members',
-            type: 'address[]',
-          },
         ],
         internalType: 'struct Chat.Conversation',
         name: '',
@@ -559,13 +615,90 @@ export const chatAbi = [
         name: 'account',
         type: 'address',
       },
+      {
+        internalType: 'uint256',
+        name: 'page',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'pageSize',
+        type: 'uint256',
+      },
     ],
-    name: 'getConversationHashes',
+    name: 'getConversationHashesPaginated',
     outputs: [
       {
         internalType: 'bytes32[]',
         name: '',
         type: 'bytes32[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'getConversationMembersCount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'uint256',
+        name: 'page',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'pageSize',
+        type: 'uint256',
+      },
+    ],
+    name: 'getConversationMembersPaginated',
+    outputs: [
+      {
+        internalType: 'address[]',
+        name: '',
+        type: 'address[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'getConversationMessagesCount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
       },
     ],
     stateMutability: 'view',
@@ -645,7 +778,41 @@ export const chatAbi = [
         type: 'address',
       },
     ],
-    name: 'getConversations',
+    name: 'getConversationsCount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'page',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'pageSize',
+        type: 'uint256',
+      },
+    ],
+    name: 'getConversationsPaginated',
     outputs: [
       {
         components: [
@@ -678,11 +845,6 @@ export const chatAbi = [
             internalType: 'bool',
             name: 'isEncrypted',
             type: 'bool',
-          },
-          {
-            internalType: 'address[]',
-            name: 'members',
-            type: 'address[]',
           },
         ],
         internalType: 'struct Chat.Conversation[]',
@@ -730,25 +892,6 @@ export const chatAbi = [
     type: 'function',
   },
   {
-    inputs: [
-      {
-        internalType: 'bytes32',
-        name: 'conversationHash',
-        type: 'bytes32',
-      },
-    ],
-    name: 'getMessagesCount',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
     inputs: [],
     name: 'getOwnerCollectedFees',
     outputs: [
@@ -769,7 +912,36 @@ export const chatAbi = [
         type: 'address',
       },
     ],
-    name: 'getUserAppIds',
+    name: 'getUserAppIdsCount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'page',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'pageSize',
+        type: 'uint256',
+      },
+    ],
+    name: 'getUserAppIdsPaginated',
     outputs: [
       {
         internalType: 'bytes32[]',
@@ -785,6 +957,11 @@ export const chatAbi = [
       {
         internalType: 'address',
         name: 'appFeeManagerAddress',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'initialOwner',
         type: 'address',
       },
     ],
@@ -945,19 +1122,6 @@ export const chatAbi = [
       },
     ],
     name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'newImplementation',
-        type: 'address',
-      },
-    ],
-    name: 'upgradeTo',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
