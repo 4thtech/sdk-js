@@ -249,6 +249,7 @@ describe('Mail', () => {
   });
 
   describe('Retrieving', async () => {
+    const signerAddress = await signer.getAddress();
     const receiverAddress = await receiver.getAddress();
     const envelope: Envelope = {
       content: {
@@ -284,6 +285,12 @@ describe('Mail', () => {
 
       expect(envelopes).toBeDefined();
       expect(envelopes.length).to.be.equal(1);
+    });
+
+    it('Should fetch sent mails', async () => {
+      const envelopes = await mail.fetchSentMails(signerAddress);
+
+      expect(envelopes.length).to.be.greaterThanOrEqual(1);
     });
 
     it('Should fetch mail by tx hash', async () => {

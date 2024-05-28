@@ -20,7 +20,7 @@ import {
 import { MailContract } from './contract/mail-contract';
 import { RemoteStorageProvider } from '@4thtech-sdk/storage';
 import { EncryptionHandler } from '@4thtech-sdk/encryption';
-import { WatchContractEventReturnType } from 'viem';
+import { BlockTag, WatchContractEventReturnType } from 'viem';
 
 /**
  * Configuration for creating an instance of the Mail.
@@ -186,6 +186,34 @@ export class Mail extends MailContract implements Mailable {
     });
 
     return this.processContractMailOutputs(contractMailOutputs, receiver);
+  }
+
+  /**
+   *  Fetch sent mails.
+   *
+   * @param {Address} sender - The mail sender address.
+   * @param {bigint | BlockTag} [fromBlock='earliest'] - The starting block number or block tag from which to fetch the mails. Defaults to 'earliest'.
+   * @param {bigint | BlockTag} [toBlock='latest'] - The ending block number or block tag until which to fetch the mails. Defaults to 'latest'.
+   * @returns {Promise<ReceivedEnvelope[]>} Array of sent mail Envelopes.
+   */
+  public async fetchSentMails(
+    sender: Address,
+    fromBlock: bigint | BlockTag = 'earliest',
+    toBlock: bigint | BlockTag = 'latest',
+  ): Promise<ReceivedEnvelope[]> {
+    const events = await this.publicClient.getContractEvents({
+      ...this.contractConfig,
+      eventName: 'MailSent',
+      args: { sender },
+      fromBlock,
+      toBlock,
+    });
+
+    const eventOutputs = events
+      .filter(({ args }) => args.appId === this.appId)
+      .map(({ args }) => args as MailSentEventOutput);
+
+    return this.processContractMailOutputs(eventOutputs, sender);
   }
 
   /**
@@ -440,9 +468,3 @@ export class Mail extends MailContract implements Mailable {
     });
   }
 }
-
-// TODO: create and put in a new method - can be used to also retrieve all sent mails
-/*const allReceivedEvents = await this.contract.queryFilter(filter);
-console.log('=============== Event ==================');
-console.log(allReceivedEvents);
-console.log('=============== End event ==================');*/

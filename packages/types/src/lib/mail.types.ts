@@ -117,6 +117,8 @@ export type MailSentEventOutput = {
   isDeleted: boolean;
 };
 
+export type MailSentEventOutputs = ReadonlyArray<MailSentEventOutput>;
+
 export type MailOpenedEventOutput = {
   appId: AppId;
   receiver: Address;
@@ -152,3 +154,11 @@ export type EnvelopeTransactionFilter = {
   metadata: string;
   index: bigint;
 };
+
+export function isMailSentEventOutput(object: unknown): object is MailSentEventOutput {
+  if (object !== null && typeof object === 'object') {
+    return 'receiver' in object;
+  }
+
+  return false;
+}

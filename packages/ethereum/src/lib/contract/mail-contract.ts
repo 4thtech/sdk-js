@@ -6,11 +6,13 @@ import {
   Envelope,
   EnvelopeTransactionFilter,
   isLocalFileInfo,
+  isMailSentEventOutput,
   isRemoteFileInfo,
   LocalFileInfo,
   MailSendOptions,
   MailSendState,
   MailSentEventOutput,
+  MailSentEventOutputs,
   PromiseFulfilledResult,
   ReceivedEnvelope,
   RemoteFileInfo,
@@ -47,11 +49,19 @@ export class MailContract extends FeeCollectorContract<typeof mailsAbi> {
   }
 
   protected async processContractMailOutputs(
-    contractMailOutputs: ContractMailOutputs,
-    receiver: Address,
+    contractMailOutputs: ContractMailOutputs | MailSentEventOutputs,
+    receiver?: Address,
   ): Promise<ReceivedEnvelope[]> {
     const processedOutputs = await Promise.allSettled(
       contractMailOutputs.map(async (contractMailOutput) => {
+        if (isMailSentEventOutput(contractMailOutput)) {
+          receiver = contractMailOutput.receiver;
+        }
+
+        if (!receiver) {
+          throw new Error('Receiver not provided');
+        }
+
         return this.processContractMailOutput(contractMailOutput, receiver);
       }),
     );
