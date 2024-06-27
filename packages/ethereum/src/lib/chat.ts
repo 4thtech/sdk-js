@@ -470,11 +470,15 @@ export class Chat extends ChatContract {
       eventName: 'MessageSent',
       args: { sender, conversationHash, index },
       onLogs: (logs) =>
-        logs.forEach(async ({ args }) => {
+        logs.forEach(async ({ transactionHash, args }) => {
           const eventOutput = args as MessageSentEventOutput;
           callback(
             eventOutput.conversationHash,
-            await this.processContractMessageOutput(eventOutput, eventOutput.conversationHash),
+            await this.processContractMessageOutput(
+              eventOutput,
+              eventOutput.conversationHash,
+              transactionHash,
+            ),
           );
         }),
     });

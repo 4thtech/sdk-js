@@ -1,5 +1,5 @@
 import { EncryptionMetaData } from './encryption.types';
-import { Address, AppId } from './ethereum.types';
+import { Address, AppId, TransactionHash } from './ethereum.types';
 
 export type ConversationHash = `0x${string}`;
 
@@ -32,6 +32,7 @@ export type ReceivedMessage = {
   sentAt: Date;
   index: bigint;
   isDeleted: boolean;
+  transactionHash?: TransactionHash;
 };
 
 export type Conversation = {

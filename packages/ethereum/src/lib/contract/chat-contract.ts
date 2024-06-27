@@ -17,6 +17,7 @@ import {
   MessageMetaData,
   MessageSentEventOutput,
   ReceivedMessage,
+  TransactionHash,
 } from '@4thtech-sdk/types';
 import { FeeCollectorContract } from './fee-collector-contract';
 import { AesEncryption, EncryptionHandler, EncryptorAesEncryption } from '@4thtech-sdk/encryption';
@@ -229,6 +230,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
   protected async processContractMessageOutput(
     contractMessageOutput: ContractMessageOutput | MessageSentEventOutput,
     conversationHash: ConversationHash,
+    transactionHash?: TransactionHash,
   ): Promise<ReceivedMessage> {
     const { sender, sentAt, metadata, index, isDeleted } = contractMessageOutput;
     let { content } = contractMessageOutput;
@@ -250,6 +252,7 @@ export class ChatContract extends FeeCollectorContract<typeof chatAbi> {
       sentAt: new Date(Number(sentAt * 1000n)),
       index,
       isDeleted,
+      transactionHash,
     };
   }
 
