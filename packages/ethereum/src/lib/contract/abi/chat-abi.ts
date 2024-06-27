@@ -617,12 +617,12 @@ export const chatAbi = [
       },
       {
         internalType: 'uint256',
-        name: 'page',
+        name: 'startIndex',
         type: 'uint256',
       },
       {
         internalType: 'uint256',
-        name: 'pageSize',
+        name: 'howMany',
         type: 'uint256',
       },
     ],
@@ -665,12 +665,12 @@ export const chatAbi = [
       },
       {
         internalType: 'uint256',
-        name: 'page',
+        name: 'startIndex',
         type: 'uint256',
       },
       {
         internalType: 'uint256',
-        name: 'pageSize',
+        name: 'howMany',
         type: 'uint256',
       },
     ],
@@ -713,12 +713,12 @@ export const chatAbi = [
       },
       {
         internalType: 'uint256',
-        name: 'page',
+        name: 'startIndex',
         type: 'uint256',
       },
       {
         internalType: 'uint256',
-        name: 'pageSize',
+        name: 'howMany',
         type: 'uint256',
       },
     ],
@@ -803,12 +803,12 @@ export const chatAbi = [
       },
       {
         internalType: 'uint256',
-        name: 'page',
+        name: 'startIndex',
         type: 'uint256',
       },
       {
         internalType: 'uint256',
-        name: 'pageSize',
+        name: 'howMany',
         type: 'uint256',
       },
     ],
@@ -932,12 +932,12 @@ export const chatAbi = [
       },
       {
         internalType: 'uint256',
-        name: 'page',
+        name: 'startIndex',
         type: 'uint256',
       },
       {
         internalType: 'uint256',
-        name: 'pageSize',
+        name: 'howMany',
         type: 'uint256',
       },
     ],

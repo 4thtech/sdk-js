@@ -53,7 +53,7 @@ describe('Chat', () => {
 
     const receivedMessages = await chat.fetchConversationMessagesPaginated(
       conversationHash,
-      messageCountAfter,
+      messageCountAfter - 1n,
       1n,
     );
 
@@ -111,7 +111,7 @@ describe('Chat', () => {
 
         const receivedMessages = await chat.fetchConversationMessagesPaginated(
           conversationHash,
-          messageCount,
+          messageCount - 1n,
           1n,
         );
 
@@ -143,7 +143,7 @@ describe('Chat', () => {
           const conversationsCount = await chat.getConversationsCount(senderAddress);
           const conversations = await chat.fetchConversationsPaginated(
             senderAddress,
-            conversationsCount,
+            conversationsCount - 1n,
             1n,
           );
           if (conversations.length) {
@@ -228,7 +228,7 @@ describe('Chat', () => {
           const conversationsCount = await chat.getConversationsCount(senderAddress);
           const conversations = await chat.fetchConversationsPaginated(
             senderAddress,
-            conversationsCount,
+            conversationsCount - 1n,
             1n,
           );
 
@@ -311,7 +311,7 @@ describe('Chat', () => {
     });
 
     it('Should get user app ids', async () => {
-      const senderAppIds = await chat.getUserAppIdsPaginated(senderAddress, 1n, 10n);
+      const senderAppIds = await chat.getUserAppIdsPaginated(senderAddress, 0n, 10n);
       const receiverAppIds = await chat.getUserAppIdsPaginated(receiverAddress, 1n, 10n);
       const receiverAppsCount = await chat.getUserAppIdsCount(receiverAddress);
 

@@ -282,19 +282,19 @@ export class Chat extends ChatContract {
    * Fetches the conversation hashes related to an account.
    *
    * @param {Address} account - The target account.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<ConversationHash[]>} A promise that resolves to an array of conversation hashes related to the account.
    */
   public async fetchConversationHashesPaginated(
     account: Address,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<readonly ConversationHash[]> {
     return this.publicClient.readContract({
       ...this.contractConfig,
       functionName: 'getConversationHashesPaginated',
-      args: [this.appId, account, pageNumber, pageSize],
+      args: [this.appId, account, startIndex, howMany],
     });
   }
 
@@ -330,7 +330,7 @@ export class Chat extends ChatContract {
 
     if (!conversation.isGroup) {
       conversation.members = [
-        ...(await this.fetchConversationMembersPaginated(conversationHash, 1n, 2n)),
+        ...(await this.fetchConversationMembersPaginated(conversationHash, 0n, 2n)),
       ];
     }
 
@@ -341,20 +341,20 @@ export class Chat extends ChatContract {
    * Fetches all the conversations related to an account.
    *
    * @param {Address} account - The target account.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<Conversation[]>} A promise that resolves to an array of conversations related to the account.
    */
   public async fetchConversationsPaginated(
     account: Address,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<Conversation[]> {
     const contractConversationOutputs: ContractConversationOutputs =
       await this.publicClient.readContract({
         ...this.contractConfig,
         functionName: 'getConversationsPaginated',
-        args: [this.appId, account, pageNumber, pageSize],
+        args: [this.appId, account, startIndex, howMany],
       });
 
     return this.processContractConversationOutputs(contractConversationOutputs);
@@ -364,19 +364,19 @@ export class Chat extends ChatContract {
    * Fetches the members of a conversation in a paginated manner.
    *
    * @param {ConversationHash} conversationHash - The target conversation's hash.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<Address[]>} A promise that resolves to an array of members of the conversation.
    */
   public async fetchConversationMembersPaginated(
     conversationHash: ConversationHash,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<readonly Address[]> {
     return await this.publicClient.readContract({
       ...this.contractConfig,
       functionName: 'getConversationMembersPaginated',
-      args: [conversationHash, pageNumber, pageSize],
+      args: [conversationHash, startIndex, howMany],
     });
   }
 
@@ -398,19 +398,19 @@ export class Chat extends ChatContract {
    * Fetches the messages of a conversation in a paginated manner.
    *
    * @param {ConversationHash} conversationHash - The target conversation's hash.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<ReceivedMessage[]>} A promise that resolves to an array of messages of the conversation.
    */
   public async fetchConversationMessagesPaginated(
     conversationHash: ConversationHash,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<ReceivedMessage[]> {
     const contractMessageOutputs: ContractMessageOutputs = await this.publicClient.readContract({
       ...this.contractConfig,
       functionName: 'getConversationMessagesPaginated',
-      args: [conversationHash, pageNumber, pageSize],
+      args: [conversationHash, startIndex, howMany],
     });
 
     return this.processContractMessageOutputs(contractMessageOutputs, conversationHash);
@@ -420,19 +420,19 @@ export class Chat extends ChatContract {
    * Fetches the app IDs a user is related to.
    *
    * @param {Address} user - The target user address.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<AppId[]>} A promise that resolves to an array of app IDs the user is related to.
    */
   public async getUserAppIdsPaginated(
     user: Address,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<readonly AppId[]> {
     return this.publicClient.readContract({
       ...this.contractConfig,
       functionName: 'getUserAppIdsPaginated',
-      args: [user, pageNumber, pageSize],
+      args: [user, startIndex, howMany],
     });
   }
 

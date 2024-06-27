@@ -170,19 +170,19 @@ export class Mail extends MailContract implements Mailable {
    *  Fetch mails paginated.
    *
    * @param {Address} receiver - The mail receiver address.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<ReceivedEnvelope[]>} Array of received mail Envelopes.
    */
   public async fetchPaginated(
     receiver: Address,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<ReceivedEnvelope[]> {
     const contractMailOutputs: ContractMailOutputs = await this.publicClient.readContract({
       ...this.contractConfig,
       functionName: 'getMailsPaginated',
-      args: [this.appId, receiver, pageNumber, pageSize],
+      args: [this.appId, receiver, startIndex, howMany],
     });
 
     return this.processContractMailOutputs(contractMailOutputs, receiver);
@@ -244,19 +244,19 @@ export class Mail extends MailContract implements Mailable {
    *  Fetch whitelisted users paginated.
    *
    * @param {Address} user - The users address.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<Address[]>} Array of whitelisted users.
    */
   public async fetchWhitelistedUsersPaginated(
     user: Address,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<readonly Address[]> {
     return this.publicClient.readContract({
       ...this.contractConfig,
       functionName: 'getWhitelistedUsersPaginated',
-      args: [this.appId, user, pageNumber, pageSize],
+      args: [this.appId, user, startIndex, howMany],
     });
   }
 
@@ -293,19 +293,19 @@ export class Mail extends MailContract implements Mailable {
    *  Retrieves the user's App ID's.
    *
    * @param {Address} user - The user address.
-   * @param {BigInt} pageNumber - The page number.
-   * @param {BigInt} pageSize - The page size.
+   * @param {BigInt} startIndex - The starting index for the slice.
+   * @param {BigInt} howMany - The maximum number of items to return.
    * @returns {Promise<AppId[]>} Array of App ID's.
    */
   public async getUserAppIdsPaginated(
     user: Address,
-    pageNumber: bigint,
-    pageSize: bigint,
+    startIndex: bigint,
+    howMany: bigint,
   ): Promise<readonly AppId[]> {
     return this.publicClient.readContract({
       ...this.contractConfig,
       functionName: 'getUserAppIdsPaginated',
-      args: [user, pageNumber, pageSize],
+      args: [user, startIndex, howMany],
     });
   }
 
