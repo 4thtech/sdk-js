@@ -5,13 +5,60 @@ export const feeCollectorAbi = [
     type: 'constructor',
   },
   {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+    ],
+    name: 'AppDoesNotExist',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'CaaSNotEnabled',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'required',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'sent',
+        type: 'uint256',
+      },
+    ],
+    name: 'InsufficientFeeSent',
+    type: 'error',
+  },
+  {
     inputs: [],
     name: 'InvalidInitialization',
     type: 'error',
   },
   {
     inputs: [],
+    name: 'NoAppFeesAvailable',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NoOwnerFeesAvailable',
+    type: 'error',
+  },
+  {
+    inputs: [],
     name: 'NotInitializing',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'OnlyAppIntegratorAllowed',
     type: 'error',
   },
   {
@@ -34,6 +81,11 @@ export const feeCollectorAbi = [
       },
     ],
     name: 'OwnableUnauthorizedAccount',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ZeroAddress',
     type: 'error',
   },
   {

@@ -18,6 +18,49 @@ export const chatAbi = [
   {
     inputs: [
       {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+    ],
+    name: 'AppDoesNotExist',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'CaaSNotEnabled',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'ConversationAlreadyExists',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'ConversationDoesNotExist',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'CreatorEncryptedSecretKeyRequired',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
         internalType: 'address',
         name: 'implementation',
         type: 'address',
@@ -33,7 +76,33 @@ export const chatAbi = [
   },
   {
     inputs: [],
+    name: 'EmptyContent',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'EmptyConversationName',
+    type: 'error',
+  },
+  {
+    inputs: [],
     name: 'FailedInnerCall',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'required',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'sent',
+        type: 'uint256',
+      },
+    ],
+    name: 'InsufficientFeeSent',
     type: 'error',
   },
   {
@@ -42,8 +111,163 @@ export const chatAbi = [
     type: 'error',
   },
   {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'member',
+        type: 'address',
+      },
+    ],
+    name: 'MemberAlreadyInConversation',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'member',
+        type: 'address',
+      },
+    ],
+    name: 'MemberNotInConversation',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'membersLength',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'keysLength',
+        type: 'uint256',
+      },
+    ],
+    name: 'MembersKeysLengthMismatch',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'uint256',
+        name: 'index',
+        type: 'uint256',
+      },
+    ],
+    name: 'MessageDoesNotExist',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NoAppFeesAvailable',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NoMembers',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NoOwnerFeesAvailable',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'NotAGroupConversation',
+    type: 'error',
+  },
+  {
     inputs: [],
     name: 'NotInitializing',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'OnlyAppIntegratorAllowed',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'OnlyCreatorAllowed',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'OnlyCreatorOrMemberAllowed',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'OnlyGroupCreatorCanAddMembers',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+    ],
+    name: 'OnlyMembersAllowed',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'conversationHash',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'uint256',
+        name: 'index',
+        type: 'uint256',
+      },
+    ],
+    name: 'OnlyMessageSenderAllowed',
     type: 'error',
   },
   {
@@ -82,6 +306,11 @@ export const chatAbi = [
       },
     ],
     name: 'UUPSUnsupportedProxiableUUID',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ZeroAddress',
     type: 'error',
   },
   {

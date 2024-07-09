@@ -18,6 +18,22 @@ export const mailsAbi = [
   {
     inputs: [
       {
+        internalType: 'bytes32',
+        name: 'appId',
+        type: 'bytes32',
+      },
+    ],
+    name: 'AppDoesNotExist',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'CaaSNotEnabled',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
         internalType: 'address',
         name: 'implementation',
         type: 'address',
@@ -32,8 +48,56 @@ export const mailsAbi = [
     type: 'error',
   },
   {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'providedLength',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minRequiredLength',
+        type: 'uint256',
+      },
+    ],
+    name: 'EnvelopeChecksumTooShort',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'providedLength',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minRequiredLength',
+        type: 'uint256',
+      },
+    ],
+    name: 'EnvelopeUrlTooShort',
+    type: 'error',
+  },
+  {
     inputs: [],
     name: 'FailedInnerCall',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'required',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'sent',
+        type: 'uint256',
+      },
+    ],
+    name: 'InsufficientFeeSent',
     type: 'error',
   },
   {
@@ -42,8 +106,71 @@ export const mailsAbi = [
     type: 'error',
   },
   {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'receiver',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'index',
+        type: 'uint256',
+      },
+    ],
+    name: 'MailAlreadyOpened',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'receiver',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'index',
+        type: 'uint256',
+      },
+    ],
+    name: 'MailDoesNotExist',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NoAppFeesAvailable',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NoOwnerFeesAvailable',
+    type: 'error',
+  },
+  {
     inputs: [],
     name: 'NotInitializing',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'receiver',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
+      },
+    ],
+    name: 'NotWhitelisted',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'OnlyAppIntegratorAllowed',
     type: 'error',
   },
   {
@@ -82,6 +209,11 @@ export const mailsAbi = [
       },
     ],
     name: 'UUPSUnsupportedProxiableUUID',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ZeroAddress',
     type: 'error',
   },
   {

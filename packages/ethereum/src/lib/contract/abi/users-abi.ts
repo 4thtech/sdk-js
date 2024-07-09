@@ -69,6 +69,38 @@ export const usersAbi = [
     type: 'error',
   },
   {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'providedLength',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minRequiredLength',
+        type: 'uint256',
+      },
+    ],
+    name: 'PublicKeyTooShort',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'providedLength',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minRequiredLength',
+        type: 'uint256',
+      },
+    ],
+    name: 'PublicKeyTypeTooShort',
+    type: 'error',
+  },
+  {
     inputs: [],
     name: 'UUPSUnauthorizedCallContext',
     type: 'error',
@@ -82,6 +114,17 @@ export const usersAbi = [
       },
     ],
     name: 'UUPSUnsupportedProxiableUUID',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+    ],
+    name: 'UserDoesNotExist',
     type: 'error',
   },
   {
