@@ -3,6 +3,7 @@ import { fantom as viemFantom } from 'viem/chains';
 
 export const fantom: Chain = {
   ...viemFantom,
+  name: 'Fantom Opera',
   rpcUrls: {
     default: { http: ['https://rpc.ftm.tools'] },
     public: { http: ['https://rpc.ftm.tools'] },
