@@ -1,3 +1,4 @@
+export { citrea } from './chains/citrea';
 export { fantom } from './chains/fantom';
 export { fantomTestnet } from './chains/fantomTestnet';
 export { gnosisChiado } from './chains/gnosisChiado';
