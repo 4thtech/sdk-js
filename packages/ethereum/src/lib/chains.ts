@@ -7,4 +7,5 @@ export { immu3Testnet } from './chains/immu3Testnet';
 export { minato } from './chains/minato';
 export { oasisSaphire } from './chains/oasisSaphire';
 export { polygonAmoy } from './chains/polygonAmoy';
+export { sonic } from './chains/sonic';
 export { sonicTestnet } from './chains/sonicTestnet';
