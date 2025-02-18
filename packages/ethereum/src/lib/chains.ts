@@ -6,6 +6,7 @@ export { hardhat } from './chains/hardhat';
 export { immu3Testnet } from './chains/immu3Testnet';
 export { minato } from './chains/minato';
 export { oasisSaphire } from './chains/oasisSaphire';
+export { polygon } from './chains/polygon';
 export { polygonAmoy } from './chains/polygonAmoy';
 export { sonic } from './chains/sonic';
 export { sonicTestnet } from './chains/sonicTestnet';
