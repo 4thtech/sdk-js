@@ -1,6 +1,7 @@
 export { citrea } from './chains/citrea';
 export { fantom } from './chains/fantom';
 export { fantomTestnet } from './chains/fantomTestnet';
+export { gnosis } from './chains/gnosis';
 export { gnosisChiado } from './chains/gnosisChiado';
 export { hardhat } from './chains/hardhat';
 export { immu3Testnet } from './chains/immu3Testnet';
