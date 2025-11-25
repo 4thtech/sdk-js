@@ -2,7 +2,7 @@ import { Chain } from '@4thtech-sdk/types';
 import { defineChain } from 'viem';
 
 export const sonicTestnet: Chain = defineChain({
-  id: 64_165,
+  id: 14_601,
   name: 'Sonic Testnet',
   network: 'sonic',
   nativeCurrency: { name: 'S', symbol: 'S', decimals: 18 },
